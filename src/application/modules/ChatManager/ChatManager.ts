@@ -1,11 +1,18 @@
+import Manager from "../Manager";
+import Mediator from "../Mediator";
 import User from "../UserManager/User";
 import Message from "./Message";
 
 var hash = require('md5');
 
-export default class ChatManager{
+export default class ChatManager extends Manager{
     private messages: Message[] = [];
     private chatHash: string = '';
+    constructor(options:{mediator: Mediator}){
+        super(options)
+        const {GET_INFO_TEST_1} = this.mediator.getTriggersNames();
+        this.mediator.get(GET_INFO_TEST_1);
+    }
 
     public getMessages(user: User): Message []{
         const answer: Message [] = [];

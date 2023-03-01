@@ -1,9 +1,14 @@
+import Manager from "../Manager";
+import Mediator from "../Mediator";
 import User from "./User";
 
-export default class UserManager{
+export default class UserManager extends Manager{
     private users:User []  = [];
     private i:number = 0;
-    constructor(){
+    constructor(options:{mediator: Mediator}){
+        super(options)
+        const {GET_INFO_TEST_1} = this.TRIGGERS;
+        this.mediator?.set(GET_INFO_TEST_1, () => this.genId());
     }
 
     private genId():number {

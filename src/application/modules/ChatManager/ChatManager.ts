@@ -10,8 +10,7 @@ export default class ChatManager extends Manager{
     private chatHash: string = '';
     constructor(options:{mediator: Mediator}){
         super(options)
-        const {GET_INFO_TEST_1} = this.mediator.getTriggersNames();
-        this.mediator.get(GET_INFO_TEST_1);
+        const {GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE} = this.mediator.getTriggersNames();
     }
 
     public getMessages(user: User): Message []{

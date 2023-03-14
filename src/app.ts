@@ -15,8 +15,9 @@ const { PORT, MEDIATOR } = config;
 const mediator = new Mediator(MEDIATOR.EVENTS, MEDIATOR.TRIGGERS);
 const userManager = new UserManager({mediator: mediator});
 const chatManager = new ChatManager({mediator: mediator});
-userManager.registration('test', 'test', 'test');
+mediator.get('REGISTRATION',{login:'test',password:'test', name: 'test'});
+console.log(mediator.get('LOG_IN', {login:'test',password:'test'}));
 app.use(express.static('public'));
-app.use(new Router(userManager,chatManager));
+app.use(new Router(mediator));
 
 app.listen(3001, () => console.log('It works!!!'));

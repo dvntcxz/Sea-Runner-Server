@@ -6,7 +6,7 @@ export default class User {
         readonly id: number,
         readonly login: string,
         private password: string,
-        private name: string) { }
+        public name: string) { console.log(name)}
 
     public get() {
         return {
@@ -19,10 +19,13 @@ export default class User {
         return (this.token === token);
     }
 
-    public auth(password:string): string | null {
+    public auth(password:string): object | null {
         if (password === this.password){
             this.token = hash(Math.random());
-            return this.token;
+            return {
+                token: this.token,
+                name: this.name
+            }
         }
         return null;
     }

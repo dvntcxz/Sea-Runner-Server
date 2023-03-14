@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import Answer from "../../answer/Answer";
-import UserManager from "../../../modules/UserManager/UserManager";
+import Mediator from "../../../modules/Mediator";
 
-export default function useRegistrationHandler(answer: Answer, userManager: UserManager) {
+export default function useRegistrationHandler(answer: Answer, mediator: Mediator) {
     return (req: Request, res: Response): void => {
-        res.send(answer.good(userManager.registration(req.params.login, req.params.password, req.params.name)))
+        res.send(answer.good(mediator.get('REGISTRATION',{login: req.params.login, password: req.params.password, name: req.params.name})))
     }
 }

@@ -9,21 +9,20 @@ import useGetMessagesHandler from './handlers/chat/useGetMessagesHandler'
 import useSendMessage from './handlers/chat/useSendMessage';
 import getAllUsersHandler from './handlers/users/getAllUsersHandler';
 import Answer from './answer/Answer';
-import UserManager from '../modules/UserManager/UserManager';
-import ChatManager from '../modules/ChatManager/ChatManager';
+import Mediator from '../modules/Mediator';
 
 const router = express.Router();
 
-function Router(userManager: UserManager,chatManager:ChatManager) {
+function Router(mediator: Mediator) {
     const answer = new Answer;
     //Users//
-    router.get('/api/login/:login/:password/:time', useLoginHandler(answer, userManager));
-    router.get('/api/registration/:login/:password/:name', useRegistrationHandler(answer, userManager));
-    router.get('/api/logout/:token', useLogoutHandler(answer, userManager));
+    router.get('/api/login/:login/:password/:time', useLoginHandler(answer, mediator));
+    router.get('/api/registration/:login/:password/:name', useRegistrationHandler(answer, mediator));
+    router.get('/api/logout/:token', useLogoutHandler(answer, mediator));
     //router.get('/api/getAllUsers/:token', getAllUsersHandler);
     //Chat//
-    router.get('/api/getMessages/:chatHash/:token', useGetMessagesHandler(answer, userManager, chatManager));
-    router.get('/api/sendMessage/:message/:to/:token', useSendMessage(answer, userManager, chatManager));
+    router.get('/api/getMessages/:chatHash/:token', useGetMessagesHandler(answer, mediator));
+    router.get('/api/sendMessage/:message/:to/:token', useSendMessage(answer, mediator));
     //Other//
     router.get('/api/baranoff', useBaranoffHandler(answer));
     router.get('/api/pow/:value/:pow', powHandler);

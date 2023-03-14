@@ -7,8 +7,12 @@ export default class UserManager extends Manager{
     private i:number = 0;
     constructor(options:{mediator: Mediator}){
         super(options)
-        const {GET_INFO_TEST_1} = this.TRIGGERS;
-        this.mediator?.set(GET_INFO_TEST_1, () => this.genId());
+        const {GET_USER_BY_TOKEN, GET_USER, LOG_IN, LOG_OUT, REGISTRATION} = this.TRIGGERS;
+        this.mediator?.set(GET_USER_BY_TOKEN, (data: {token:string}) => this.getUserByToken(data.token));
+        this.mediator?.set(GET_USER, (data: {id:number}) => this.getUser(data.id));
+        this.mediator?.set(LOG_IN, (data: {login:string, password: string}) => this.login(data.login,data.password));
+        this.mediator?.set(LOG_OUT, (data: {token:string}) => this.logout(data.token));
+        this.mediator?.set(REGISTRATION, (data: {login:string, password: string, name: string}) => this.registration(data.login, data.password, data.name));
     }
 
     private genId():number {
@@ -29,6 +33,7 @@ export default class UserManager extends Manager{
 
     public registration (login:string, password:string, name:string) {
         const newId = this.genId()
+        console.log(name);
         this.users.push(new User(newId,login,password,name));
         return true; 
     }

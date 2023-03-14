@@ -19,7 +19,7 @@ export default class Mediator{
 
     public get(name:string, data?: any){
         if (name && this.triggers[name] instanceof Function){
-            this.triggers[name](data);
+            return this.triggers[name](data);
         }
         return null;
     }

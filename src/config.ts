@@ -1,6 +1,10 @@
 export default class CONFIG{
     public PORT:number = 3001;
 
+    DB_CONNECT = {
+        NAME: './application/modules/DB/SeaRunner.db'
+    }
+
     public MEDIATOR:{
         [key: string]: {[key: string]:string}
     } = {

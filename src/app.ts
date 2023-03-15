@@ -7,17 +7,17 @@ import Mediator from './application/modules/Mediator';
 
 const app = express();
 const Router = require('./application/routers/Router');
+const DB = require(./application/modules/DB/DB);
 app.use(cors({
     origin: '*'
 }));
 const config = new CONFIG;
-const { PORT, MEDIATOR } = config;
+const { PORT, MEDIATOR, DB_CONNECT } = config;
+
 const mediator = new Mediator(MEDIATOR.EVENTS, MEDIATOR.TRIGGERS);
-const userManager = new UserManager({mediator: mediator});
-const chatManager = new ChatManager({mediator: mediator});
-mediator.get('REGISTRATION',{login:'test',password:'test', name: 'test'});
-console.log(mediator.get('LOG_IN', {login:'test',password:'test'}));
+const userManager = new UserManager({mediator: mediator, db: DB});
+const chatManager = new ChatManager({mediator: mediator, db: DB});
 app.use(express.static('public'));
 app.use(new Router(mediator));
 
-app.listen(3001, () => console.log('It works!!!'));
+app.listen(PORT, () => console.log('It works!!!'));

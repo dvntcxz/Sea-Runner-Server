@@ -7,7 +7,7 @@ import Mediator from './application/modules/Mediator';
 
 const app = express();
 const Router = require('./application/routers/Router');
-const DB = require(./application/modules/DB/DB);
+const DB = require('./application/modules/DB/DB');
 app.use(cors({
     origin: '*'
 }));

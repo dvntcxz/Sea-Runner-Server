@@ -1,22 +1,28 @@
 import express = require('express');
 import cors = require('cors');
+const app = express();
+
+import CONFIG from './config';
+import DB from './application/modules/DB/DB';
+import Mediator from './application/modules/Mediator';
 import UserManager from './application/modules/UserManager/UserManager';
 import ChatManager from './application/modules/ChatManager/ChatManager';
-import CONFIG from './config';
-import Mediator from './application/modules/Mediator';
 
-const app = express();
+
 const Router = require('./application/routers/Router');
-const DB = require('./application/modules/DB/DB');
-app.use(cors({
-    origin: '*'
-}));
 const config = new CONFIG;
 const { PORT, MEDIATOR, DB_CONNECT } = config;
 
+
+
+
 const mediator = new Mediator(MEDIATOR.EVENTS, MEDIATOR.TRIGGERS);
-const userManager = new UserManager({mediator: mediator, db: DB});
-const chatManager = new ChatManager({mediator: mediator, db: DB});
+const db = new DB(DB_CONNECT);
+new UserManager({mediator: mediator, db});
+new ChatManager({mediator: mediator, db});
+app.use(cors({
+    origin: '*'
+}));
 app.use(express.static('public'));
 app.use(new Router(mediator));
 

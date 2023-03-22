@@ -1,4 +1,4 @@
-import Manager from "../Manager";
+import Manager, {IManager} from "../Manager";
 import Mediator from "../Mediator";
 import User from "../UserManager/User";
 import Message from "./Message";
@@ -8,7 +8,7 @@ var hash = require('md5');
 export default class ChatManager extends Manager{
     private messages: Message[] = [];
     private chatHash: string = '';
-    constructor(options:{mediator: Mediator}){
+    constructor(options:IManager){
         super(options)
         const {GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE} = this.mediator.getTriggersNames();
     }

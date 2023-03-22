@@ -1,9 +1,11 @@
 const sqlite3 = require('sqlite3');
 
+import {TUser} from '../Types';
+
 export default class DB {
     private db;
-    constructor({ NAME: string }) {
-        this.db = new sqlite3.Database(NAME);
+    constructor(options: { NAME: string }) {
+        this.db = new sqlite3.Database(options.NAME);
         (async ()=> {
             const user = await this.getUser(2);
             console.log(user);
@@ -17,11 +19,10 @@ export default class DB {
         return new Promise((resolve) => {
             this.db.get('SELECT * FROM users WHERE id=?',
                 [id],
-                (error, row) => {
-                    console.log(error);
-                    resolve = row;
-                })
-        })
+                (error: any, row: any) => resolve( (error ? null : row) as TUser))
+                });
     }
+
+    
 
 }

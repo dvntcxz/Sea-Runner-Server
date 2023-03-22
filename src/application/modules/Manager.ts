@@ -1,4 +1,10 @@
 import Mediator from "./Mediator";
+import DB from "./DB/DB";
+
+export interface IManager{
+    mediator: Mediator;
+    db: DB;
+}
 
 export default class Manager{
     protected mediator:Mediator;

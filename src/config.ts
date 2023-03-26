@@ -9,8 +9,8 @@ export default class CONFIG{
         [key: string]: {[key: string]:string}
     } = {
         EVENTS:{
-            TEST_1:'TEST_1',
-            TEST_2:'TEST_2'
+            CHANGE_USERS:'CHANGE_USERS',
+            CHANGE_USER:'CHANGE_USER'
         },
         TRIGGERS:{
             GET_USER_BY_TOKEN: 'GET_USER_BY_TOKEN',

@@ -18,11 +18,11 @@ function Router(mediator: Mediator) {
     //Users//
     router.get('/api/login/:login/:password/:time', useLoginHandler(answer, mediator));
     router.get('/api/registration/:login/:password/:name', useRegistrationHandler(answer, mediator));
-    router.get('/api/logout/:token', useLogoutHandler(answer, mediator));
+    router.get('/api/logout/:id/:token', useLogoutHandler(answer, mediator));
     //router.get('/api/getAllUsers/:token', getAllUsersHandler);
     //Chat//
-    router.get('/api/getMessages/:chatHash/:token', useGetMessagesHandler(answer, mediator));
-    router.get('/api/sendMessage/:message/:to/:token', useSendMessage(answer, mediator));
+    router.get('/api/getMessages/:chatHash/:id/:token', useGetMessagesHandler(answer, mediator));
+    router.get('/api/sendMessage/:message/:to/:id/:token', useSendMessage(answer, mediator));
     //Other//
     router.get('/api/baranoff', useBaranoffHandler(answer));
     router.get('/api/pow/:value/:pow', powHandler);

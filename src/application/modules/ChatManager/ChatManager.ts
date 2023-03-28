@@ -16,10 +16,6 @@ export default class ChatManager extends Manager {
     constructor(options: IManager) {
         super(options)
         const { GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE } = this.mediator.getTriggersNames();
-        (async () => {
-            const user = await this.getMessagesAll();
-            console.log(user);
-        })()
     }
 
     public async getMessagesByUser(id: number) {

@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3');
 import { Database } from 'sqlite3';
 import Ship from '../GameManager/Ship';
-import { TUser, TUsers, TCaptain, TShip, TUserRegistrationData, TMessages} from '../Types';
+import { TUser, TUsers, TCaptain, TShip, TUserRegistrationData, TMessages } from '../Types';
 
 export default class DB {
     private db;
@@ -67,5 +67,14 @@ export default class DB {
             this.db.all('SELECT * FROM messages WHERE userIdTo is NULL',
                 (error: any, rows: any) => resolve((error ? null : rows)))
         });
+    }
+
+    public editMessage(id: number, message: string) {
+        new Promise((resolve) => {
+            this.db.run('UPDATE messages SET message=? WHERE id=?',
+                [message, id],
+                (error: any, row: any) => resolve((error ? null : row)))
+        });
+        return true;
     }
 }

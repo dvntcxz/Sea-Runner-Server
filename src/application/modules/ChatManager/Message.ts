@@ -1,22 +1,22 @@
 import User from "../UserManager/User";
 
-export default class Message{
+export default class Message {
     constructor(
-        private from: User,
-        private text: string,
-        private to: User
-    ){}
+        private userIdFrom: number,
+        private userIdTo: number | null,
+        private message: string
+    ) { }
 
-    get(){
+    /*get(){
         return {
-            from: this.from.get(),
-            message: this.text,
-            to: this.to.get()
+            userIdFrom: this.userIdFrom.get(),
+            userIdTo: this.userIdTo.get(),
+            message: this.message
         }
     }
 
-    canRead(user:User):boolean{
+    canRead(userId:id):boolean{
         if (user === this.from || user === this.to) return true 
         return false;
-    }
+    }*/
 }

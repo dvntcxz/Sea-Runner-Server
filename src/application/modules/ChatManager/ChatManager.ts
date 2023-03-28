@@ -15,7 +15,10 @@ export default class ChatManager extends Manager {
     private chatHash: string = '';
     constructor(options: IManager) {
         super(options)
-        const { GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE } = this.mediator.getTriggersNames();
+        /*const { GET_MESSAGES_ALL, GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE } = this.mediator.getTriggersNames();
+        this.mediator.set(GET_MESSAGES_ALL, () => this.getMessagesAll());
+        this.mediator.set(GET_MESSAGES, (id: number) => this.getMessagesByUser(id));*/
+        //this.mediator.set(ADD_MESSAGE, (id: number) => this.addMessage(id));
     }
 
     public async getMessagesByUser(id: number) {
@@ -39,7 +42,7 @@ export default class ChatManager extends Manager {
         return this.chatHash;
     }
 
-    /*public addMassage(from: number,to: number, text: string){
+    /*public addMessage(from: number,to: number, text: string){
         
         this.messages.push(new Message(from,to, text));
         this.chatHash = hash(Math.random());

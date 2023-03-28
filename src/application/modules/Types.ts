@@ -7,7 +7,7 @@ export type TUser = {
 
 };
 
-export type TUsers = TUser [];
+export type TUsers = TUser[];
 
 export type TUserRegistrationData = {
     login: string;
@@ -62,3 +62,11 @@ export type TItem = {
     grade: number;
 }
 
+export type TMessage = {
+    id: number;
+    userIdFrom: number;
+    userIdTo: number | null;
+    message: string;
+}
+
+export type TMessages = TMessage[];

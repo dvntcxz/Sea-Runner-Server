@@ -18,6 +18,7 @@ export default class CONFIG{
             LOG_IN: 'LOG_IN',
             LOG_OUT: 'LOG_OUT',
             REGISTRATION: 'REGISTRATION',
+            GET_ALL_USERS: 'GET_ALL_USERS',
             GET_MESSAGES:'GET_MESSAGES', 
             GET_CHAT_HASH:'GET_CHAT_HASH', 
             ADD_MESSAGE: 'ADD_MESSAGE'

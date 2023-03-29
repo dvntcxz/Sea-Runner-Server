@@ -7,12 +7,15 @@ import Answer from "../../answer/Answer";
 
 export default function useGetMessagesHandler(answer: Answer, mediator: Mediator) {
     return (req: Request, res: Response): void => {
-        const user = mediator.get('GET_USER_BY_TOKEN', req.params.token);
-        if (user){
-            res.send(answer.good({
-                messages: mediator.get('GET_MESSAGES',user),
-                chatHash: mediator.get('GET_CHAT_HASH')
-            }));
+        if (req.params.chatHash != mediator.get('GET_CHAT_HASH')){
+            const user = mediator.get('GET_USER_BY_TOKEN', req.params.token);
+            if (user){
+                res.send(answer.good({
+                    messages: mediator.get('GET_MESSAGES',user.id),
+                    chatHash: mediator.get('GET_CHAT_HASH')
+                }));
+            }
         }
+        else res.send(null);
     }
 }

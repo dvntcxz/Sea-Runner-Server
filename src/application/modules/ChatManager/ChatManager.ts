@@ -1,51 +1,65 @@
 import Manager, { IManager } from "../Manager";
 import Mediator from "../Mediator";
+import { TMessage, TMessages, TNewMessage } from "../Types";
 import User from "../UserManager/User";
 import Message from "./Message";
 
 var hash = require('md5');
 
 export default class ChatManager extends Manager {
-    private userMessages: {
-        [userId: number]: Message
+    private cacheUserMessages: {
+        [userId: number]: TMessages
     } = {};
-    private allMessages: {
-        [userId: number]: Message
-    } = {};
-    private chatHash: string = '';
+    private cacheAllMessages: TMessages = [];
+    private chatHash: string = hash(Math.random());
     constructor(options: IManager) {
         super(options)
-        /*const { GET_MESSAGES_ALL, GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE } = this.mediator.getTriggersNames();
-        this.mediator.set(GET_MESSAGES_ALL, () => this.getMessagesAll());
-        this.mediator.set(GET_MESSAGES, (id: number) => this.getMessagesByUser(id));*/
-        //this.mediator.set(ADD_MESSAGE, (id: number) => this.addMessage(id));
+        const { GET_MESSAGES_ALL, GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE } = this.mediator.getTriggersNames();
+        this.mediator.set(GET_MESSAGES, (id: number) => this.getAllMessagesToUser(id));
+        this.mediator.set(ADD_MESSAGE, (newMessage:TNewMessage) => this.addMessage(newMessage));
+        this.mediator.set(GET_CHAT_HASH, () => this.getChatHash());
+
+        this.setMessagesToAll();
     }
 
-    public async getMessagesByUser(id: number) {
-        const data = await this.db.allMessagesThisUser(id);
-        data.forEach((message) => {
-            this.userMessages[message.id] = new Message(message.userIdFrom, message.userIdTo, message.message)
-        })
-        return this.userMessages;
+    private async setMessagesToAll(){
+        this.cacheAllMessages = await this.db.getMessagesToAll();
     }
 
-    public async getMessagesAll() {
-        const data = await this.db.getMessagesToAll();
-        data.forEach((message) => {
-            this.allMessages[message.id] = new Message(message.userIdFrom, message.userIdTo, message.message)
-        })
-        return this.allMessages;
+    private async setMessagesToUser(userId: number){
+        this.cacheUserMessages[userId] = await this.db.getMessagesToUser(userId);
     }
 
+    public getMessagesToUser(userId: number): TMessages{
+        return this.cacheUserMessages[userId];
+    }
+
+    public getMessagesToAll(): TMessages{
+        return this.cacheAllMessages;
+    }
+
+    public getAllMessagesToUser(userId: number) {
+        if (this.cacheUserMessages[userId]) {
+            this.setMessagesToUser(userId);
+        }
+        const messages = this.getMessagesToAll().concat(this.getMessagesToUser(userId));
+        return messages.sort((a,b) => a.id - b.id);
+    }
 
     public getChatHash() {
         return this.chatHash;
     }
 
-    /*public addMessage(from: number,to: number, text: string){
-        
-        this.messages.push(new Message(from,to, text));
-        this.chatHash = hash(Math.random());
-        return true;
-    }*/
+    public async addMessage(newMessage:TNewMessage){
+        if (await this.db.addMessage(newMessage)) {
+            if (newMessage.userIdTo) {
+                this.setMessagesToUser(newMessage.userIdTo);
+                this.setMessagesToUser(newMessage.userIdFrom);
+            }
+            else this.setMessagesToAll();
+            this.chatHash = hash(Math.random());
+            return true;
+        };
+        return false;
+    }
 }

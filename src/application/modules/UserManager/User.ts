@@ -1,6 +1,6 @@
 import { TUser } from "../Types";
 
-var hash = require('md5');
+
 
 export default class User {
     private token: string | null;
@@ -29,7 +29,6 @@ export default class User {
 
     public auth(password:string): object | null {
         if (password === this.password){
-            this.token = hash(Math.random());
             return {
                 id: this.id,
                 token: this.token,

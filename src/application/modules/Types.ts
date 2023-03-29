@@ -1,3 +1,7 @@
+///////////////////////////
+////////Users//////////////
+///////////////////////////
+
 export type TUser = {
     id: number;
     login: string;
@@ -19,6 +23,11 @@ export type TUserSignInData = {
     login: string;
     password: string;
 }
+
+
+///////////////////////////
+////////Game///////////////
+///////////////////////////
 
 export type TCaptain = {
     id: number;
@@ -62,6 +71,10 @@ export type TItem = {
     grade: number;
 }
 
+///////////////////////////
+////////Messages///////////
+///////////////////////////
+
 export type TMessage = {
     id: number;
     userIdFrom: number;
@@ -70,3 +83,9 @@ export type TMessage = {
 }
 
 export type TMessages = TMessage[];
+
+export type TNewMessage = {
+    userIdFrom: number;
+    userIdTo: number | null;
+    message: string;
+}

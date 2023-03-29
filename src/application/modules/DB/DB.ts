@@ -1,12 +1,10 @@
-const sqlite3 = require('sqlite3');
 import { Database } from 'sqlite3';
 import Ship from '../GameManager/Ship';
-import { TUser, TUsers, TCaptain, TShip, TUserRegistrationData, TMessages } from '../Types';
+import { TUser, TUsers, TCaptain, TShip, TUserRegistrationData, TMessages, TNewMessage } from '../Types';
 
 export default class DB {
     private db;
     constructor(options: { NAME: string }) {
-        console.log(options.NAME);
         this.db = new Database(options.NAME);
         //run UPDATE,INSERT, DELETE
         //get SELECT for только для одной
@@ -24,13 +22,23 @@ export default class DB {
     public getAllUsers() {
         return new Promise<TUsers>((resolve) => {
             this.db.all('SELECT * FROM users',
-                (error: any, rows: any) => resolve(error ? [] : rows))
-        });
+                (error: Error, rows: any) => resolve(error ? [] : rows))
+                });
     }
 
     public addUser(data: TUserRegistrationData) {
-        const { login, password, name } = data;
-        this.db.run('INSERT INTO users(login,password,name) VALUES(?,?,?)', [login, password, name]);
+        const {login, password, name} = data;
+        return new Promise<boolean> ((resolve) => {
+            this.db.run('INSERT INTO users(login,password,name) VALUES(?,?,?)',[login,password,name],
+            (error:Error) => resolve((error) ? false : true))
+        });
+    }
+
+    public setUserToken(userId: number, token: string | null) {
+        return new Promise<boolean> ((resolve) => {
+            this.db.run('UPDATE users SET token=? where id = ?',[token,userId],
+            (error:Error) => resolve((error) ? false : true))
+        });
     }
 
     public addCaptain(userId: number, allianceId: number) {
@@ -54,10 +62,10 @@ export default class DB {
     //Chat//
     ////////
 
-    public allMessagesThisUser(id: number) {
+    public getMessagesToUser(userId: number) {
         return new Promise<TMessages>((resolve) => {
-            this.db.all('SELECT * FROM messages WHERE userIdTo=?',
-                [id],
+            this.db.all('SELECT * FROM messages WHERE userIdTo=? or (userIdFrom=? AND userIdTo is NOT NULL)',
+                [userId],
                 (error: any, rows: any) => resolve((error ? null : rows)))
         });
     }
@@ -69,12 +77,20 @@ export default class DB {
         });
     }
 
+    public addMessage(newMessage: TNewMessage){
+        const {userIdFrom, userIdTo, message} = newMessage;
+        return new Promise<boolean>((resolve) => {
+            this.db.run('INSERT INTO messages(userIdFrom, userIdTo, message) VALUES (?,?,?)',
+                [userIdFrom, userIdTo, message],
+                (error: Error) => resolve((error ? false : true)))
+        });
+    }
+
     public editMessage(id: number, message: string) {
-        new Promise((resolve) => {
+        return new Promise<boolean>((resolve) => {
             this.db.run('UPDATE messages SET message=? WHERE id=?',
                 [message, id],
-                (error: any, row: any) => resolve((error ? null : row)))
+                (error: Error) => resolve((error ? false : true)))
         });
-        return true;
     }
 }

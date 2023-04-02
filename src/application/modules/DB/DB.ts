@@ -41,6 +41,14 @@ export default class DB {
         });
     }
 
+    public async updateUser(id: number, name: TUsers): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => { 
+          const sql = `UPDATE users SET name = ? WHERE id = ?`; 
+          this.db.run(sql, [name, id], (err: any) => resolve(err ? false : true)
+          );
+        });
+      }
+
     public addCaptain(userId: number, allianceId: number) {
         this.db.run('INSERT INTO captains(userId,allianceId) VALUES(?,?)', [userId, allianceId]);
     }

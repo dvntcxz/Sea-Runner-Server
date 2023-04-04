@@ -71,6 +71,8 @@ export type TItem = {
     grade: number;
 }
 
+export type TShips = TShip[];
+
 ///////////////////////////
 ////////Messages///////////
 ///////////////////////////

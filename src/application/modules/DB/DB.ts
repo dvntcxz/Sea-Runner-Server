@@ -1,6 +1,6 @@
 import { Database } from 'sqlite3';
 import ORM from './ORM';
-import { TUser, TUsers, TCaptain, TShip, TUserRegistrationData, TMessages, TNewMessage } from '../Types';
+import { TUser, TUsers, TCaptain, TShips, TUserRegistrationData, TMessages, TNewMessage } from '../Types';
 
 export default class DB {
     private db;
@@ -11,8 +11,6 @@ export default class DB {
         //get SELECT for только для одной
         //all SELECT for для НЕСКОЛЬКИХ
         this.orm = new ORM(this.db);
-
-        this.orm.delete('messages', { userIdFrom: 123, userIdTo: 312 });
     }
 
     public getUser(id: number) {
@@ -39,15 +37,17 @@ export default class DB {
             this.db.run('UPDATE users SET token=? where id = ?', [token, userId],
                 (error: Error) => resolve((error) ? false : true))
         });
+        //return this.orm.update('users', userId, { token: token });
     }
 
     public async updateUser(id: number, name: TUsers): Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => { 
-          const sql = `UPDATE users SET name = ? WHERE id = ?`; 
-          this.db.run(sql, [name, id], (err: any) => resolve(err ? false : true)
-          );
+        return new Promise<boolean>((resolve, reject) => {
+            const sql = `UPDATE users SET name = ? WHERE id = ?`;
+            this.db.run(sql, [name, id], (err: any) => resolve(err ? false : true)
+            );
         });
-      }
+        //return this.orm.update('users', id, { name: name });
+    }
 
     public addCaptain(userId: number, allianceId: number) {
         this.db.run('INSERT INTO captains(userId,allianceId) VALUES(?,?)', [userId, allianceId]);
@@ -57,8 +57,23 @@ export default class DB {
         return this.orm.get<TCaptain>('captains', userId);
     }
 
+    public updateCaptain(userId: number) {
+        return this.orm.update('captains', userId, { name: name });
+    }
+
+    public updateShip(userId: number) {
+        return this.orm.update('ships', userId, { name: name });
+    }
+
     public addShip() {
-        this.db.run('INSERT INTO ships() VALUES(?,?)', [])
+        this.db.run('INSERT INTO ships() VALUES(?,?)', []);
+    }
+
+    public getShips() {
+        return new Promise<TShips>((resolve) => {
+            this.db.all('SELECT * FROM ships',
+                (error: Error, rows: any) => resolve(error ? [] : rows))
+        });
     }
 
 
@@ -91,11 +106,7 @@ export default class DB {
     }
 
     public editMessage(id: number, message: string) {
-        return new Promise<boolean>((resolve) => {
-            this.db.run('UPDATE messages SET message=? WHERE id=?',
-                [message, id],
-                (error: Error) => resolve((error ? false : true)))
-        });
+        return this.orm.update('messages', id, { message: message });
     }
 
     deleteMessages(userIdFrom = null, userIdTo = null) {

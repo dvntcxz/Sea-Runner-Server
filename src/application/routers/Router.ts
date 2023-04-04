@@ -9,6 +9,7 @@ import getAllUsersHandler from './handlers/users/getAllUsersHandler';
 import Answer from './answer/Answer';
 import Mediator from '../modules/Mediator';
 
+
 const router = express.Router();
 
 export default function Router(mediator: Mediator) {

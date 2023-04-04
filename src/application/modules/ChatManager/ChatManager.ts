@@ -1,8 +1,5 @@
 import Manager, { IManager } from "../Manager";
-import Mediator from "../Mediator";
-import { TMessage, TMessages, TNewMessage } from "../Types";
-import User from "../UserManager/User";
-import Message from "./Message";
+import { IMessage, TMessages, IMessageData } from "../Types";
 
 var hash = require('md5');
 
@@ -16,7 +13,7 @@ export default class ChatManager extends Manager {
         super(options)
         const { GET_MESSAGES_ALL, GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE } = this.mediator.getTriggersNames();
         this.mediator.set(GET_MESSAGES, (id: number) => this.getAllMessagesToUser(id));
-        this.mediator.set(ADD_MESSAGE, (newMessage:TNewMessage) => this.addMessage(newMessage));
+        this.mediator.set(ADD_MESSAGE, (newMessage:IMessageData) => this.addMessage(newMessage));
         this.mediator.set(GET_CHAT_HASH, () => this.getChatHash());
 
         this.setMessagesToAll();
@@ -50,7 +47,7 @@ export default class ChatManager extends Manager {
         return this.chatHash;
     }
 
-    public async addMessage(newMessage:TNewMessage){
+    public async addMessage(newMessage:IMessageData){
         if (await this.db.addMessage(newMessage)) {
             if (newMessage.userIdTo) {
                 this.setMessagesToUser(newMessage.userIdTo);

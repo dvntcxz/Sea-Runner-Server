@@ -8,6 +8,7 @@ import Mediator from './application/modules/Mediator';
 import UserManager from './application/modules/UserManager/UserManager';
 import ChatManager from './application/modules/ChatManager/ChatManager';
 import Router from './application/routers/Router';
+import GameManager from './application/modules/GameManager/GameManager';
 
 const config = new CONFIG;
 const { PORT, MEDIATOR, DB_CONNECT } = config;
@@ -15,8 +16,9 @@ const { PORT, MEDIATOR, DB_CONNECT } = config;
 
 const mediator = new Mediator(MEDIATOR.EVENTS, MEDIATOR.TRIGGERS);
 const db = new DB(DB_CONNECT);
-new UserManager({mediator: mediator, db});
-new ChatManager({mediator: mediator, db});
+new UserManager({mediator, db});
+new ChatManager({mediator, db});
+new GameManager({mediator, db});
 app.use(cors({
     origin: '*'
 }));

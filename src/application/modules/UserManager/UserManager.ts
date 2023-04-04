@@ -1,5 +1,5 @@
 import Manager, { IManager } from "../Manager";
-import { TUser, TUserRegistrationData, TUserSignInData } from "../Types";
+import { IUser, IUserData, ILogin } from "../Types";
 import User from "./User";
 
 var hash = require('md5');
@@ -18,9 +18,9 @@ export default class UserManager extends Manager {
         const { GET_USER_BY_TOKEN, GET_USER, LOG_IN, LOG_OUT, REGISTRATION, GET_ALL_USERS } = this.TRIGGERS;
         this.mediator.set(GET_USER_BY_TOKEN, (token: string) => this.getUserByToken(token));
         this.mediator.set(GET_USER, (id: number) => this.getUser(id));
-        this.mediator.set(LOG_IN, (data: TUserSignInData) => this.login(data));
+        this.mediator.set(LOG_IN, (data: ILogin) => this.login(data));
         this.mediator.set(LOG_OUT, (token: string) => this.logout(token));
-        this.mediator.set(REGISTRATION, (data: TUserRegistrationData) => this.registration(data));
+        this.mediator.set(REGISTRATION, (data: IUserData) => this.registration(data));
         this.mediator.set(GET_ALL_USERS, () => this.getAllUsers());
         //Mediator Events
         const { CHANGE_USERS, CHANGE_USER } = this.EVENTS;
@@ -42,7 +42,7 @@ export default class UserManager extends Manager {
         return this.cacheUsersByLogin[login] || null;;
     }
 
-    private updateCaches(user: TUser){
+    private updateCaches(user: IUser){
         const cacheUser = new User(user);
         this.cacheUsersById[user.id] = cacheUser;
         this.cacheUsersByLogin[user.login] = cacheUser;
@@ -56,16 +56,18 @@ export default class UserManager extends Manager {
 
     private async loadAllUserFromDB() {
         let allUsers = await this.db.getAllUsers();
-        this.cacheUsersByToken = {};
-        allUsers.forEach((user) => this.updateCaches(user))
+        if (allUsers) {
+            this.cacheUsersByToken = {};
+            allUsers.forEach((user) => this.updateCaches(user))
+        }
     }
 
-    public async registration(data: TUserRegistrationData) {
+    public async registration(data: IUserData) {
         if (await this.db.addUser(data)) this.loadAllUserFromDB();
         return true;
     }
 
-    public login(data: TUserSignInData) {
+    public login(data: ILogin) {
         const { login, password } = data;
         const user = this.getUserByLogin(login);
         if (user) {

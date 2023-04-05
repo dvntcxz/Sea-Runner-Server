@@ -1,14 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import http from 'http';
-
 const app = express();
-const server = http.createServer(app);
-const io = require('socket.io')(server, {
-    cors: {
-        origin: "*",
-    }
-})
 
 import CONFIG from './config';
 import DB from './application/modules/DB/DB';
@@ -19,19 +11,19 @@ import Router from './application/routers/Router';
 import GameManager from './application/modules/GameManager/GameManager';
 
 const config = new CONFIG;
-const { PORT, MEDIATOR, DB_CONNECT, MESSAGES } = config;
+const { PORT, MEDIATOR, DB_CONNECT } = config;
 
 
 const mediator = new Mediator(MEDIATOR.EVENTS, MEDIATOR.TRIGGERS);
 const db = new DB(DB_CONNECT);
-new UserManager({ mediator, db, io, MESSAGES });
-new ChatManager({ mediator, db, io, MESSAGES });
-new GameManager({ mediator, db, io, MESSAGES });
+new UserManager({mediator, db});
+new ChatManager({mediator, db});
+new GameManager({mediator, db});
 app.use(cors({
     origin: '*'
 }));
 app.use(express.static('public'));
 app.use(Router(mediator));
 
-server.listen(PORT, () => console.log('It works with socket!!!'));
+app.listen(PORT, () => console.log('It works!!!'));
 

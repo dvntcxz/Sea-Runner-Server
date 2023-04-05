@@ -5,6 +5,11 @@ export default class CONFIG{
         NAME: './application/modules/DB/SeaRunner.db'
     }
 
+    public MESSAGES: { [key: string]:string } = {
+        SEND_MESSAGE: 'SEND_MESSAGE',
+        GET_MESSAGES: 'GET_MESSAGES'
+    }
+
     public MEDIATOR:{
         [key: string]: {[key: string]:string}
     } = {

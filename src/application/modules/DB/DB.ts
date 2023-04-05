@@ -1,6 +1,6 @@
 import { Database } from 'sqlite3';
 import ORM from './ORM';
-import { TUser, TUsers, TCaptain, TShips, TUserRegistrationData, TMessages, TNewMessage } from '../Types';
+import { IUser, TUsers, TShips, IUserData, TMessages, IMessageData, IShipData, ICaptainData, TCaptainData, ICaptain, TCaptains } from '../Types';
 
 export default class DB {
     private db;
@@ -13,67 +13,64 @@ export default class DB {
         this.orm = new ORM(this.db);
     }
 
+    ////////////////////////////
+    //////////USER//////////////
+    ////////////////////////////
+
     public getUser(id: number) {
-        return this.orm.get<TUser>('users', id);
+        return this.orm.get<IUser>('users', id);
     }
 
     public getAllUsers() {
-        return new Promise<TUsers>((resolve) => {
-            this.db.all('SELECT * FROM users',
-                (error: Error, rows: any) => resolve(error ? [] : rows))
-        });
+        return this.orm.all('users').do<TUsers>();
     }
 
-    public addUser(data: TUserRegistrationData) {
-        const { login, password, name } = data;
-        return new Promise<boolean>((resolve) => {
-            this.db.run('INSERT INTO users(login,password,name) VALUES(?,?,?)', [login, password, name],
-                (error: Error) => resolve((error) ? false : true))
-        });
+    public addUser(data: IUserData) {
+        return this.orm.insert('users',[data]).do();
     }
 
     public setUserToken(userId: number, token: string | null) {
-        return new Promise<boolean>((resolve) => {
-            this.db.run('UPDATE users SET token=? where id = ?', [token, userId],
-                (error: Error) => resolve((error) ? false : true))
-        });
-        //return this.orm.update('users', userId, { token: token });
+        return this.orm.update('users', userId, {token});
     }
 
-    public async updateUser(id: number, name: TUsers): Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => {
-            const sql = `UPDATE users SET name = ? WHERE id = ?`;
-            this.db.run(sql, [name, id], (err: any) => resolve(err ? false : true)
-            );
-        });
-        //return this.orm.update('users', id, { name: name });
+    public async updateUser(id: number, field: object) {
+        return this.orm.update('users', id, field);
     }
 
-    public addCaptain(userId: number, allianceId: number) {
-        this.db.run('INSERT INTO captains(userId,allianceId) VALUES(?,?)', [userId, allianceId]);
+    ////////////////////////////
+    //////////CAPTAIN///////////
+    ////////////////////////////
+
+    public addCaptain(captain: ICaptainData) {
+        return this.orm.insert('captains', [captain]).do();
     }
 
     public getCaptain(userId: number) {
-        return this.orm.get<TCaptain>('captains', userId);
+        return this.orm.get<ICaptain>('captains', userId);
     }
 
-    public updateCaptain(userId: number) {
-        return this.orm.update('captains', userId, { name: name });
+    public getCaptains() {
+        return this.orm.all('captains').do<TCaptains>();
+    }
+
+    public updateCaptain(userId: number, captain: TCaptainData) {
+        return this.orm.update('captains', userId, captain);
+    }
+
+    ////////////////////////////
+    //////////SHIP//////////////
+    ////////////////////////////
+
+    public addShip(ship: IShipData) {
+        return this.orm.insert('ships', [ship]).do();
     }
 
     public updateShip(userId: number) {
-        return this.orm.update('ships', userId, { name: name });
-    }
-
-    public addShip() {
-        this.db.run('INSERT INTO ships() VALUES(?,?)', []);
+        return this.orm.update('ships', userId, { name });
     }
 
     public getShips() {
-        return new Promise<TShips>((resolve) => {
-            this.db.all('SELECT * FROM ships',
-                (error: Error, rows: any) => resolve(error ? [] : rows))
-        });
+        return this.orm.all('ships').do<TShips>();
     }
 
 
@@ -96,24 +93,19 @@ export default class DB {
         });
     }
 
-    public addMessage(newMessage: TNewMessage) {
-        const { userIdFrom, userIdTo, message } = newMessage;
-        return new Promise<boolean>((resolve) => {
-            this.db.run('INSERT INTO messages(userIdFrom, userIdTo, message) VALUES (?,?,?)',
-                [userIdFrom, userIdTo, message],
-                (error: Error) => resolve(!error))
-        });
+    public addMessage(newMessage: IMessageData) {
+        return this.orm.insert('messages', [newMessage]).do();
     }
 
     public editMessage(id: number, message: string) {
-        return this.orm.update('messages', id, { message: message });
+        return this.orm.update('messages', id, {message});
     }
 
-    deleteMessages(userIdFrom = null, userIdTo = null) {
-        return this.orm.delete('messages', { userIdFrom, userIdTo })
+    public deleteMessages(id: number) {
+        return this.orm.delete('messages', id)
     }
 
-    deleteUser(id: number) {
+    public deleteUser(id: number) {
         return this.orm.delete('users', id);
     }
 }

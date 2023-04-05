@@ -1,4 +1,4 @@
-import { TUser } from "../Types";
+import { IUser } from "../Types";
 
 
 
@@ -8,7 +8,7 @@ export default class User {
     readonly login: string;
     private password: string;
     public name: string;
-    constructor(data: TUser) {
+    constructor(data: IUser) {
         this.id = data.id;
         this.token = data.token;
         this.login = data.login;
@@ -43,7 +43,7 @@ export default class User {
             return true;
     }
 
-    public updateData(data: TUser): void{
+    public updateData(data: IUser): void{
         this.token = data.token;
         this.password = data.password;
         this.name = data.name;

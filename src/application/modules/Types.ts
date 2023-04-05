@@ -1,55 +1,71 @@
 ///////////////////////////
 ////////Users//////////////
 ///////////////////////////
-
-export type TUser = {
-    id: number;
+export interface ILogin {
     login: string;
     password: string;
-    name: string;
-    token: string | null;
-
 };
 
-export type TUsers = TUser[];
-
-export type TUserRegistrationData = {
-    login: string;
-    password: string;
+export interface IUserData extends ILogin{
     name: string;
 }
 
-export type TUserSignInData = {
-    login: string;
-    password: string;
+export interface IUser extends IUserData{
+    id: number;
+    token: string;
 }
 
+export type TUsers = IUser[];
 
 ///////////////////////////
-////////Game///////////////
+////////GAME///////////////
 ///////////////////////////
 
-export type TCaptain = {
-    id: number;
+
+///////////////////////////
+////////CAPTAIN////////////
+///////////////////////////
+export type TCaptainData = {
+    activeShipId?: number | null;
+    posX?: number;
+    posY?: number;
+    direction?: number;
+}
+
+export interface ICaptainData{
     userId: number;
-    allianceId: string;
-    activeShipId: number;
+    allianceId: number;
+    activeShipId: number | null;
     posX: number;
     posY: number;
     direction: number;
 }
 
-export type TShip = {
+export interface ICaptain extends ICaptainData{
     id: number;
+}
+
+export type TCaptains = ICaptain [];
+
+///////////////////////////
+////////SHIP///////////////
+///////////////////////////
+
+export interface IShipData {
     captainId: number;
     currentHp: number;
-    maxHp: number;
     speed: number;
     attackSpeed: number;
-    countCannon: number;
+    countCannon: number | null;
     grade: number;
-    sizeInventory: number
+    sizeInventory: number;
 }
+
+export interface IShip extends IShipData {
+    id: number;
+}
+
+export type TShips = IShip[];
 
 export type TEffectCell = {
     id: number;
@@ -60,7 +76,7 @@ export type TEffectCell = {
 export type TInventoryCell = {
     id: number;
     shipId: number;
-    invetoryNumber: number;
+    cellNumber: number;
     itemId: number;
 }
 
@@ -71,23 +87,21 @@ export type TItem = {
     grade: number;
 }
 
-export type TShips = TShip[];
+
 
 ///////////////////////////
 ////////Messages///////////
 ///////////////////////////
 
-export type TMessage = {
+export interface IMessageData  {
+    userIdFrom: number;
+    userIdTo: number | null;
+    message: string;
+}
+
+export interface IMessage extends IMessageData {
     id: number;
-    userIdFrom: number;
-    userIdTo: number | null;
-    message: string;
 }
 
-export type TMessages = TMessage[];
+export type TMessages = IMessage[];
 
-export type TNewMessage = {
-    userIdFrom: number;
-    userIdTo: number | null;
-    message: string;
-}

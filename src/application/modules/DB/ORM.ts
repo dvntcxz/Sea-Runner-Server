@@ -1,10 +1,11 @@
-import { TUser, TUsers, TCaptain, TShip, TUserRegistrationData, TMessages, TNewMessage } from '../Types';
 import { Database } from "sqlite3";
+import SQLQuery from "./SQLQuery";
 export default class ORM {
-    private db;
+    private sqlQueryManager;
 
-    constructor(db: Database) {
+    constructor(private db: Database) {
         this.db = db;
+        this.sqlQueryManager = new SQLQuery(this.db);
     }
 
     private getValuesParams(conditions: object | number, operand: string) {
@@ -21,6 +22,18 @@ export default class ORM {
         return { values, params };
     }
 
+    private getValuesAndNameFields(fields: object []){
+            const fieldsNames = Object.keys(fields[0]);
+            const fieldsValues = `(${fieldsNames.map(() => '?').join(', ')})`
+            let values: any[] = [];
+            const valuesMask: string [] = [];
+            fields.forEach((obj:object) => {
+                values = [...values, ...Object.values(obj)];
+                valuesMask.push(fieldsValues);
+            })
+            return {values, fieldsNames, valuesMask};
+    }
+
     get<T>(table: string, conditions: object | number, fields: string = '*', operand: string = 'AND') {
         const { values, params } = this.getValuesParams(conditions, operand);
         const query = `SELECT ${fields} FROM ${table} WHERE ${params}`;
@@ -28,17 +41,10 @@ export default class ORM {
             this.db.run(query, values, (error: Error, row: any) => resolve(error ? null : row)));
     }
 
-    allTable<T>(table: string, fields: string = '*') { //limit offset order 
+    all(table: string, fields: string = '*'){
+        const {db, orderBy,limit,offset,conditions, all} = this.sqlQueryManager;
         const query = `SELECT ${fields} FROM ${table}`;
-        return new Promise<T>((resolve) =>
-            this.db.all(query, (error: Error, rows: any) => resolve(error ? [] : rows)));
-    }
-
-    all<T>(table: string, conditions: object, fields: string = '*', operand: string = 'AND') {
-        const { values, params } = this.getValuesParams(conditions, operand);
-        const query = `SELECT ${fields} FROM ${table} WHERE ${params}`;
-        return new Promise<T>((resolve) =>
-            this.db.all(query, values, (error: Error, rows: any) => resolve(error ? [] : rows)));
+        return {db, query, values: [], orderBy, limit, offset, conditions, do: all};
     }
 
     update(table: string, conditions: object | number, fields: object, operand: string = 'AND') {
@@ -51,9 +57,13 @@ export default class ORM {
         });
     }
 
-    isGeneratorFunction() {
-
+    insert(table: string, fields: object []) {
+        const {db, run} = this.sqlQueryManager;
+        const {fieldsNames, values, valuesMask} = this.getValuesAndNameFields(fields);
+        let query:string = `INSERT INTO ${table} (${fieldsNames.join(', ')}) VALUES ${valuesMask.join(', ')}`;
+        return {db, query, values, do: run};
     }
+
     delete(table: string, conditions: object | number, operand: string = 'AND') {
         const { values, params } = this.getValuesParams(conditions, operand);
         const query = `DELETE FROM ${table} WHERE ${params}`;

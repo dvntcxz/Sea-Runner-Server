@@ -1,11 +1,11 @@
 import Manager, { IManager } from "../Manager";
-import { TUser, TUserRegistrationData, TUserSignInData } from "../Types";
+import { IUser, IUserData, ILogin } from "../Types";
 import User from "./User";
 
 var hash = require('md5');
 
 type TCacheUser = {
-    [key:number | string]: User
+    [key: number | string]: User
 }
 
 export default class UserManager extends Manager {
@@ -14,18 +14,33 @@ export default class UserManager extends Manager {
     private cacheUsersByLogin: TCacheUser = {};
     constructor(options: IManager) {
         super(options);
+        const messages: any [] = [];
+        //io
+        if (!this.io) return;
+        this.io.on('connection', (socket: any) => {
+            console.log('connection!!!', socket.id);
+            //socket.emit('GET_MESSAGES', (data) => console.log(data))
+            socket.on('SEND_MESSAGE', (message: string) => {
+                messages.push({ id: socket.id, message });
+                this.io.emit('GET_MESSAGES', messages)
+            });
+
+            socket.on('disconnect', () => console.log('without', socket.id));
+        });
+        //const {io} = options.io;
+
         //Mediator Triggers
         const { GET_USER_BY_TOKEN, GET_USER, LOG_IN, LOG_OUT, REGISTRATION, GET_ALL_USERS } = this.TRIGGERS;
         this.mediator.set(GET_USER_BY_TOKEN, (token: string) => this.getUserByToken(token));
         this.mediator.set(GET_USER, (id: number) => this.getUser(id));
-        this.mediator.set(LOG_IN, (data: TUserSignInData) => this.login(data));
+        this.mediator.set(LOG_IN, (data: ILogin) => this.login(data));
         this.mediator.set(LOG_OUT, (token: string) => this.logout(token));
-        this.mediator.set(REGISTRATION, (data: TUserRegistrationData) => this.registration(data));
+        this.mediator.set(REGISTRATION, (data: IUserData) => this.registration(data));
         this.mediator.set(GET_ALL_USERS, () => this.getAllUsers());
         //Mediator Events
         const { CHANGE_USERS, CHANGE_USER } = this.EVENTS;
-        this.mediator.subscribe('CHANGE_USERS', () => this.loadAllUserFromDB());
-        this.mediator.subscribe('CHANGE_USER', (id: number) => this.updateUserData(id));
+        this.mediator.subscribe(CHANGE_USERS, () => this.loadAllUserFromDB());
+        this.mediator.subscribe(CHANGE_USER, (id: number) => this.updateUserData(id));
 
         this.loadAllUserFromDB();
     }
@@ -42,7 +57,7 @@ export default class UserManager extends Manager {
         return this.cacheUsersByLogin[login] || null;;
     }
 
-    private updateCaches(user: TUser){
+    private updateCaches(user: IUser) {
         const cacheUser = new User(user);
         this.cacheUsersById[user.id] = cacheUser;
         this.cacheUsersByLogin[user.login] = cacheUser;
@@ -56,21 +71,23 @@ export default class UserManager extends Manager {
 
     private async loadAllUserFromDB() {
         let allUsers = await this.db.getAllUsers();
-        this.cacheUsersByToken = {};
-        allUsers.forEach((user) => this.updateCaches(user))
+        if (allUsers) {
+            this.cacheUsersByToken = {};
+            allUsers.forEach((user) => this.updateCaches(user))
+        }
     }
 
-    public async registration(data: TUserRegistrationData) {
+    public async registration(data: IUserData) {
         if (await this.db.addUser(data)) this.loadAllUserFromDB();
         return true;
     }
 
-    public login(data: TUserSignInData) {
+    public login(data: ILogin) {
         const { login, password } = data;
         const user = this.getUserByLogin(login);
         if (user) {
             const data = user.auth(password);
-            if (data){
+            if (data) {
                 this.db.setUserToken(user.id, hash(Math.random()));
                 this.updateUserData(user.id);
             }
@@ -83,7 +100,7 @@ export default class UserManager extends Manager {
         const user = this.getUserByToken(token);
         if (user) {
             if (user.logout()) {
-                delete(this.cacheUsersByToken[token]);
+                delete (this.cacheUsersByToken[token]);
                 this.db.setUserToken(user.id, null);
                 this.updateUserData(user.id);
                 return true;
@@ -92,7 +109,7 @@ export default class UserManager extends Manager {
         return false;
     }
 
-    public getAllUsers(){
+    public getAllUsers() {
         return Object.values(this.cacheUsersById).map(user => user.get());
     }
 }

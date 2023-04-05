@@ -5,7 +5,7 @@ import User from "./User";
 var hash = require('md5');
 
 type TCacheUser = {
-    [key:number | string]: User
+    [key: number | string]: User
 }
 
 export default class UserManager extends Manager {
@@ -14,6 +14,21 @@ export default class UserManager extends Manager {
     private cacheUsersByLogin: TCacheUser = {};
     constructor(options: IManager) {
         super(options);
+        const messages: any [] = [];
+        //io
+        if (!this.io) return;
+        this.io.on('connection', (socket: any) => {
+            console.log('connection!!!', socket.id);
+            //socket.emit('GET_MESSAGES', (data) => console.log(data))
+            socket.on('SEND_MESSAGE', (message: string) => {
+                messages.push({ id: socket.id, message });
+                this.io.emit('GET_MESSAGES', messages)
+            });
+
+            socket.on('disconnect', () => console.log('without', socket.id));
+        });
+        //const {io} = options.io;
+
         //Mediator Triggers
         const { GET_USER_BY_TOKEN, GET_USER, LOG_IN, LOG_OUT, REGISTRATION, GET_ALL_USERS } = this.TRIGGERS;
         this.mediator.set(GET_USER_BY_TOKEN, (token: string) => this.getUserByToken(token));
@@ -24,8 +39,8 @@ export default class UserManager extends Manager {
         this.mediator.set(GET_ALL_USERS, () => this.getAllUsers());
         //Mediator Events
         const { CHANGE_USERS, CHANGE_USER } = this.EVENTS;
-        this.mediator.subscribe('CHANGE_USERS', () => this.loadAllUserFromDB());
-        this.mediator.subscribe('CHANGE_USER', (id: number) => this.updateUserData(id));
+        this.mediator.subscribe(CHANGE_USERS, () => this.loadAllUserFromDB());
+        this.mediator.subscribe(CHANGE_USER, (id: number) => this.updateUserData(id));
 
         this.loadAllUserFromDB();
     }
@@ -42,7 +57,7 @@ export default class UserManager extends Manager {
         return this.cacheUsersByLogin[login] || null;;
     }
 
-    private updateCaches(user: IUser){
+    private updateCaches(user: IUser) {
         const cacheUser = new User(user);
         this.cacheUsersById[user.id] = cacheUser;
         this.cacheUsersByLogin[user.login] = cacheUser;
@@ -72,7 +87,7 @@ export default class UserManager extends Manager {
         const user = this.getUserByLogin(login);
         if (user) {
             const data = user.auth(password);
-            if (data){
+            if (data) {
                 this.db.setUserToken(user.id, hash(Math.random()));
                 this.updateUserData(user.id);
             }
@@ -85,7 +100,7 @@ export default class UserManager extends Manager {
         const user = this.getUserByToken(token);
         if (user) {
             if (user.logout()) {
-                delete(this.cacheUsersByToken[token]);
+                delete (this.cacheUsersByToken[token]);
                 this.db.setUserToken(user.id, null);
                 this.updateUserData(user.id);
                 return true;
@@ -94,7 +109,7 @@ export default class UserManager extends Manager {
         return false;
     }
 
-    public getAllUsers(){
+    public getAllUsers() {
         return Object.values(this.cacheUsersById).map(user => user.get());
     }
 }

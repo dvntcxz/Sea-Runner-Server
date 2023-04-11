@@ -22,7 +22,8 @@ export default class CONFIG{
     } = {
         EVENTS:{
             CHANGE_USERS:'CHANGE_USERS',
-            CHANGE_USER:'CHANGE_USER'
+            CHANGE_USER:'CHANGE_USER',
+            USER_LOG_IN: 'USER_LOG_IN'
         },
         TRIGGERS:{
             GET_USER_BY_TOKEN: 'GET_USER_BY_TOKEN',
@@ -33,7 +34,8 @@ export default class CONFIG{
             GET_ALL_USERS: 'GET_ALL_USERS',
             GET_MESSAGES:'GET_MESSAGES', 
             GET_CHAT_HASH:'GET_CHAT_HASH', 
-            ADD_MESSAGE: 'ADD_MESSAGE'
+            ADD_MESSAGE: 'ADD_MESSAGE',
+            SEND_ALL: 'SEND_ALL'
         }
     }
 }

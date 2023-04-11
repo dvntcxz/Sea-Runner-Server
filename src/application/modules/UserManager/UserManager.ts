@@ -2,7 +2,11 @@ import Cache from "../Cache";
 import Manager, { IManager } from "../Manager";
 import { IUser, IUserData, ILogin } from "../Types";
 import User from "./User";
-import md5 from 'md5';
+import { Socket } from "socket.io";
+
+interface IUserSocket extends Socket {
+    user: User | null;
+}
 
 export default class UserManager extends Manager {
     private cacheUsersById = new Cache<User>;
@@ -12,25 +16,7 @@ export default class UserManager extends Manager {
         const messages: any [] = [];
         //io
         if (!this.io) return;
-        this.io.on('connection', (socket: any) => {
-            socket.on(this.MESSAGES.REGISTRATION, (data: IUserData) => {
-                const result = this.registration(data);
-                socket.emit(this.MESSAGES.REGISTRATION, result);
-            });
-            socket.on(this.MESSAGES.LOG_IN, (data:ILogin) => {
-                const UserData = this.login(data);
-                if (UserData) socket.user = this.getUser(UserData.id);
-                socket.emit(this.MESSAGES.LOG_IN, UserData);
-            });
-            socket.on(this.MESSAGES.LOG_OUT, (token: string) => {
-                if (socket.user){
-                    (this.logout(socket.user, token)) ? socket.emit(this.MESSAGES.LOG_OUT) : socket.emit(this.MESSAGES.LOG_OUT_ERROR);
-                }
-            });
-            socket.on('disconnect', () => {
-                if (socket.user) socket.user.logout();
-            });
-        });
+        this.io.on('connection', (socket: IUserSocket) => this.connectHandler(socket));
 
         //Mediator Triggers
         const { GET_USER_BY_TOKEN, GET_USER, LOG_IN, LOG_OUT, REGISTRATION, GET_ALL_USERS } = this.TRIGGERS;
@@ -39,11 +25,56 @@ export default class UserManager extends Manager {
         this.mediator.set(REGISTRATION, (data: IUserData) => this.registration(data));
         this.mediator.set(GET_ALL_USERS, () => this.getAllUsers());
         //Mediator Events
-        const { CHANGE_USERS, CHANGE_USER } = this.EVENTS;
+        const { USER_LOG_IN, CHANGE_USERS, CHANGE_USER } = this.EVENTS;
         this.mediator.subscribe(CHANGE_USERS, () => this.loadAllUserFromDB());
         this.mediator.subscribe(CHANGE_USER, (id: number) => this.updateUserData(id));
+        this.mediator.subscribe(USER_LOG_IN, (socket: IUserSocket) => this.logoutHandler(socket));
 
         this.loadAllUserFromDB();
+    }
+
+    private connectHandler(socket:IUserSocket): void{
+        this.registrationHandler(socket);
+        this.loginHandler(socket);
+        this.disconnectHandler(socket);
+    }
+
+    private registrationHandler(socket:IUserSocket): void{
+        socket.on(this.MESSAGES.REGISTRATION, (data: IUserData) => {
+            const result = this.registration(data);
+            socket.emit(this.MESSAGES.REGISTRATION, result);
+        });
+    }
+
+    private loginHandler(socket:IUserSocket): void{
+        socket.on(this.MESSAGES.LOG_IN, (data:ILogin) => {
+            const UserData = this.login(data);
+            if (UserData) {
+                socket.user = this.getUser(UserData.id);
+                socket.join(`${UserData.id}`);
+                socket.join(`online_users`);
+                this.mediator.call(this.EVENTS.USER_LOG_IN, socket);
+            }
+            socket.emit(this.MESSAGES.LOG_IN, UserData);
+        });
+    }
+
+    private logoutHandler(socket:IUserSocket): void{
+        socket.on(this.MESSAGES.LOG_OUT, (token: string) => {
+            if (socket.user?.verification(token)){
+                (this.logout(socket.user)) ? socket.emit(this.MESSAGES.LOG_OUT) : socket.emit(this.MESSAGES.LOG_OUT_ERROR);
+            }
+        });
+    }
+
+    private disconnectHandler(socket:IUserSocket): void{
+        socket.on('disconnect', () => {
+            if (socket.user) {
+                this.logout(socket.user);
+                socket.leave('online_users');
+                socket.leave(`${socket.user.id}`);
+            }
+        })
     }
 
     public getUser(id: number): User | null {
@@ -93,18 +124,18 @@ export default class UserManager extends Manager {
         return false;
     }
 
-    public logout(user: User, token: string): boolean {
-            if (user.verification(token)) {
-                if (user.logout()) {
-                    this.db.setUserToken(user.id, null);
-                }
-                return true;
-            }
+    public logout(user: User): boolean {
+        if (user.logout()) {
+            this.db.setUserToken(user.id, null);
+            return true;
+        }
         return false;
     }
 
     public getAllUsers() {
         return Object.values(this.cacheUsersById).map(user => user.get());
     }
+
+
 }
 

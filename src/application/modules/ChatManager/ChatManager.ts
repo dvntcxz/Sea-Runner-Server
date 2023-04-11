@@ -1,6 +1,5 @@
 import Manager, { IManager } from "../Manager";
 import { IMessage, TMessages, IMessageData } from "../Types";
-
 var hash = require('md5');
 
 export default class ChatManager extends Manager {
@@ -11,27 +10,38 @@ export default class ChatManager extends Manager {
     private chatHash: string = hash(Math.random());
     constructor(options: IManager) {
         super(options)
+        if (!this.io) return;
+        this.io.on('connection', (socket: any) => {
+            socket.on(this.MESSAGES.SEND_MESSAGE, (userIdTo: number, message: string, token: string) => {
+                console.log(userIdTo, message, token);
+                if (socket.user.verification(token)) {
+                    const userIdFrom = socket.user.getId();
+                    const result = this.addMessage({userIdFrom, userIdTo, message});
+                    socket.emit(this.MESSAGES.SEND_MESSAGE, result);
+                }
+            });
+        });
         const { GET_MESSAGES_ALL, GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE } = this.mediator.getTriggersNames();
         this.mediator.set(GET_MESSAGES, (id: number) => this.getAllMessagesToUser(id));
-        this.mediator.set(ADD_MESSAGE, (newMessage:IMessageData) => this.addMessage(newMessage));
+        this.mediator.set(ADD_MESSAGE, (newMessage: IMessageData) => this.addMessage(newMessage));
         this.mediator.set(GET_CHAT_HASH, () => this.getChatHash());
 
         this.setMessagesToAll();
     }
 
-    private async setMessagesToAll(){
+    private async setMessagesToAll() {
         this.cacheAllMessages = await this.db.getMessagesToAll();
     }
 
-    private async setMessagesToUser(userId: number){
+    private async setMessagesToUser(userId: number) {
         this.cacheUserMessages[userId] = await this.db.getMessagesToUser(userId);
     }
 
-    public getMessagesToUser(userId: number): TMessages{
+    public getMessagesToUser(userId: number): TMessages {
         return this.cacheUserMessages[userId];
     }
 
-    public getMessagesToAll(): TMessages{
+    public getMessagesToAll(): TMessages {
         return this.cacheAllMessages;
     }
 
@@ -40,14 +50,14 @@ export default class ChatManager extends Manager {
             this.setMessagesToUser(userId);
         }
         const messages = this.getMessagesToAll().concat(this.getMessagesToUser(userId));
-        return messages.sort((a,b) => a.id - b.id);
+        return messages.sort((a, b) => a.id - b.id);
     }
 
     public getChatHash() {
         return this.chatHash;
     }
 
-    public async addMessage(newMessage:IMessageData){
+    public async addMessage(newMessage: IMessageData) {
         if (await this.db.addMessage(newMessage)) {
             if (newMessage.userIdTo) {
                 this.setMessagesToUser(newMessage.userIdTo);

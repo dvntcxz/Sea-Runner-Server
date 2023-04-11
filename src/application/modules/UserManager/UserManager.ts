@@ -9,7 +9,7 @@ export default class UserManager extends Manager {
     private cacheUsersByLogin = new Cache<User>;
     constructor(options: IManager) {
         super(options);
-        const messages: any [] = [];
+        const messages: any[] = [];
         //io
         if (!this.io) return;
         this.io.on('connection', (socket: any) => {
@@ -17,13 +17,13 @@ export default class UserManager extends Manager {
                 const result = this.registration(data);
                 socket.emit(this.MESSAGES.REGISTRATION, result);
             });
-            socket.on(this.MESSAGES.LOG_IN, (data:ILogin) => {
+            socket.on(this.MESSAGES.LOG_IN, (data: ILogin) => {
                 const UserData = this.login(data);
                 if (UserData) socket.user = this.getUser(UserData.id);
                 socket.emit(this.MESSAGES.LOG_IN, UserData);
             });
             socket.on(this.MESSAGES.LOG_OUT, (token: string) => {
-                if (socket.user){
+                if (socket.user) {
                     (this.logout(socket.user, token)) ? socket.emit(this.MESSAGES.LOG_OUT) : socket.emit(this.MESSAGES.LOG_OUT_ERROR);
                 }
             });
@@ -57,7 +57,7 @@ export default class UserManager extends Manager {
     private updateCaches(user: IUser) {
         const cacheUser = new User(user);
         this.cacheUsersById.set(user.id, cacheUser);
-        this.cacheUsersByLogin.set(user.login,cacheUser);
+        this.cacheUsersByLogin.set(user.login, cacheUser);
     }
 
     public async updateUserData(id: number) {
@@ -94,12 +94,12 @@ export default class UserManager extends Manager {
     }
 
     public logout(user: User, token: string): boolean {
-            if (user.verification(token)) {
-                if (user.logout()) {
-                    this.db.setUserToken(user.id, null);
-                }
-                return true;
+        if (user.verification(token)) {
+            if (user.logout()) {
+                this.db.setUserToken(user.id, null);
             }
+            return true;
+        }
         return false;
     }
 

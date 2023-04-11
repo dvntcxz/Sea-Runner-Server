@@ -1,3 +1,7 @@
+type TNameArray = {
+    [key: string]:string
+};
+
 export default class CONFIG{
     public PORT:number = 3001;
 
@@ -5,13 +9,16 @@ export default class CONFIG{
         NAME: './application/modules/DB/SeaRunner.db'
     }
 
-    public MESSAGES: { [key: string]:string } = {
+    public MESSAGES: TNameArray = {
         SEND_MESSAGE: 'SEND_MESSAGE',
-        GET_MESSAGES: 'GET_MESSAGES'
+        GET_MESSAGES: 'GET_MESSAGES',
+        LOG_IN: 'LOG_IN',
+        REGISTRATION: 'REGISTRATION',
+        LOG_OUT: 'LOG_OUT',
     }
 
     public MEDIATOR:{
-        [key: string]: {[key: string]:string}
+        [key: string]: TNameArray
     } = {
         EVENTS:{
             CHANGE_USERS:'CHANGE_USERS',

@@ -1,6 +1,11 @@
 import { IUser } from "../Types";
+import md5 from "md5";
 
-
+type TUserData = {
+    id: number;
+    token: string;
+    name: string;
+}
 
 export default class User {
     private token: string | null;
@@ -27,8 +32,9 @@ export default class User {
         return (this.token === token);
     }
 
-    public auth(password:string): object | null {
+    public auth(password:string):TUserData | null {
         if (password === this.password){
+            this.token = md5(Math.random().toString());
             return {
                 id: this.id,
                 token: this.token,

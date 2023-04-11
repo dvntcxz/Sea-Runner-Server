@@ -1,14 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import http from 'http';
+import {Server} from 'socket.io';
 
 const app = express();
 const server = http.createServer(app);
-const io = require('socket.io')(server, {
+const io = new Server(server, {
     cors: {
         origin: "*",
     }
-})
+});
 
 import CONFIG from './config';
 import DB from './application/modules/DB/DB';
@@ -18,9 +19,7 @@ import ChatManager from './application/modules/ChatManager/ChatManager';
 import Router from './application/routers/Router';
 import GameManager from './application/modules/GameManager/GameManager';
 
-const config = new CONFIG;
-const { PORT, MEDIATOR, DB_CONNECT, MESSAGES } = config;
-
+const { PORT, MEDIATOR, DB_CONNECT, MESSAGES } = new CONFIG;
 
 const mediator = new Mediator(MEDIATOR.EVENTS, MEDIATOR.TRIGGERS);
 const db = new DB(DB_CONNECT);

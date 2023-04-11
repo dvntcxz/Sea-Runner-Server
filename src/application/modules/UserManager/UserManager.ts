@@ -1,40 +1,41 @@
+import Cache from "../Cache";
 import Manager, { IManager } from "../Manager";
 import { IUser, IUserData, ILogin } from "../Types";
 import User from "./User";
-
-var hash = require('md5');
-
-type TCacheUser = {
-    [key: number | string]: User
-}
+import md5 from 'md5';
 
 export default class UserManager extends Manager {
-    private cacheUsersById: TCacheUser = {};
-    private cacheUsersByToken: TCacheUser = {};
-    private cacheUsersByLogin: TCacheUser = {};
+    private cacheUsersById = new Cache<User>;
+    private cacheUsersByLogin = new Cache<User>;
     constructor(options: IManager) {
         super(options);
         const messages: any [] = [];
         //io
         if (!this.io) return;
         this.io.on('connection', (socket: any) => {
-            console.log('connection!!!', socket.id);
-            //socket.emit('GET_MESSAGES', (data) => console.log(data))
-            socket.on('SEND_MESSAGE', (message: string) => {
-                messages.push({ id: socket.id, message });
-                this.io.emit('GET_MESSAGES', messages)
+            socket.on(this.MESSAGES.REGISTRATION, (data: IUserData) => {
+                const result = this.registration(data);
+                socket.emit(this.MESSAGES.REGISTRATION, result);
             });
-
-            socket.on('disconnect', () => console.log('without', socket.id));
+            socket.on(this.MESSAGES.LOG_IN, (data:ILogin) => {
+                const UserData = this.login(data);
+                if (UserData) socket.user = this.getUser(UserData.id);
+                socket.emit(this.MESSAGES.LOG_IN, UserData);
+            });
+            socket.on(this.MESSAGES.LOG_OUT, (token: string) => {
+                if (socket.user){
+                    (this.logout(socket.user, token)) ? socket.emit(this.MESSAGES.LOG_OUT) : socket.emit(this.MESSAGES.LOG_OUT_ERROR);
+                }
+            });
+            socket.on('disconnect', () => {
+                if (socket.user) socket.user.logout();
+            });
         });
-        //const {io} = options.io;
 
         //Mediator Triggers
         const { GET_USER_BY_TOKEN, GET_USER, LOG_IN, LOG_OUT, REGISTRATION, GET_ALL_USERS } = this.TRIGGERS;
-        this.mediator.set(GET_USER_BY_TOKEN, (token: string) => this.getUserByToken(token));
         this.mediator.set(GET_USER, (id: number) => this.getUser(id));
         this.mediator.set(LOG_IN, (data: ILogin) => this.login(data));
-        this.mediator.set(LOG_OUT, (token: string) => this.logout(token));
         this.mediator.set(REGISTRATION, (data: IUserData) => this.registration(data));
         this.mediator.set(GET_ALL_USERS, () => this.getAllUsers());
         //Mediator Events
@@ -45,23 +46,18 @@ export default class UserManager extends Manager {
         this.loadAllUserFromDB();
     }
 
-    public getUserByToken(token: string): User | null {
-        return this.cacheUsersByToken[token] || null;
-    }
-
     public getUser(id: number): User | null {
-        return this.cacheUsersById[id] || null;
+        return this.cacheUsersById.get(id) || null;
     }
 
     private getUserByLogin(login: string): User | null {
-        return this.cacheUsersByLogin[login] || null;;
+        return this.cacheUsersByLogin.get(login) || null;;
     }
 
     private updateCaches(user: IUser) {
         const cacheUser = new User(user);
-        this.cacheUsersById[user.id] = cacheUser;
-        this.cacheUsersByLogin[user.login] = cacheUser;
-        if (user.token) this.cacheUsersByToken[user.token] = cacheUser;
+        this.cacheUsersById.set(user.id, cacheUser);
+        this.cacheUsersByLogin.set(user.login,cacheUser);
     }
 
     public async updateUserData(id: number) {
@@ -72,14 +68,16 @@ export default class UserManager extends Manager {
     private async loadAllUserFromDB() {
         let allUsers = await this.db.getAllUsers();
         if (allUsers) {
-            this.cacheUsersByToken = {};
             allUsers.forEach((user) => this.updateCaches(user))
         }
     }
 
     public async registration(data: IUserData) {
-        if (await this.db.addUser(data)) this.loadAllUserFromDB();
-        return true;
+        if (await this.db.addUser(data)) {
+            this.loadAllUserFromDB()
+            return true;
+        };
+        return false;
     }
 
     public login(data: ILogin) {
@@ -88,24 +86,20 @@ export default class UserManager extends Manager {
         if (user) {
             const data = user.auth(password);
             if (data) {
-                this.db.setUserToken(user.id, hash(Math.random()));
-                this.updateUserData(user.id);
+                this.db.setUserToken(user.id, data.token);
             }
             return data;
         }
         return false;
     }
 
-    public logout(token: string): boolean {
-        const user = this.getUserByToken(token);
-        if (user) {
-            if (user.logout()) {
-                delete (this.cacheUsersByToken[token]);
-                this.db.setUserToken(user.id, null);
-                this.updateUserData(user.id);
+    public logout(user: User, token: string): boolean {
+            if (user.verification(token)) {
+                if (user.logout()) {
+                    this.db.setUserToken(user.id, null);
+                }
                 return true;
             }
-        }
         return false;
     }
 

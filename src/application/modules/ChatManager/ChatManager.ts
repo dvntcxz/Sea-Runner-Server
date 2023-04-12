@@ -1,32 +1,40 @@
 import Manager, { IManager } from "../Manager";
-import { IMessage, TMessages, IMessageData } from "../Types";
-var hash = require('md5');
+import { IMessage, TMessages, IMessageData, IUserSocket } from "../Types";
 
 export default class ChatManager extends Manager {
     private cacheUserMessages: {
         [userId: number]: TMessages
     } = {};
     private cacheAllMessages: TMessages = [];
-    private chatHash: string = hash(Math.random());
     constructor(options: IManager) {
         super(options)
         if (!this.io) return;
-        this.io.on('connection', (socket: any) => {
-            socket.on(this.MESSAGES.SEND_MESSAGE, (userIdTo: number, message: string, token: string) => {
-                console.log(userIdTo, message, token);
-                if (socket.user.verification(token)) {
-                    const userIdFrom = socket.user.getId();
-                    const result = this.addMessage({userIdFrom, userIdTo, message});
-                    socket.emit(this.MESSAGES.SEND_MESSAGE, result);
-                }
-            });
-        });
         const { GET_MESSAGES_ALL, GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE } = this.mediator.getTriggersNames();
         this.mediator.set(GET_MESSAGES, (id: number) => this.getAllMessagesToUser(id));
         this.mediator.set(ADD_MESSAGE, (newMessage: IMessageData) => this.addMessage(newMessage));
         this.mediator.set(GET_CHAT_HASH, () => this.getChatHash());
-
+        this.mediator.subscribe(this.EVENTS.USER_LOADED, (socket: IUserSocket) => this.sendMessageHandler(socket))
         this.setMessagesToAll();
+    }
+
+    private sendMessageHandler(socket: IUserSocket) {
+        if (socket.user) {
+            socket.emit(this.MESSAGES.GET_MESSAGES_ALL, this.getMessagesToAll());
+            socket.emit(this.MESSAGES.GET_MESSAGES_PRIVATE, this.getMessagesToUser(socket.user.get().id))
+        }
+        socket.on(this.MESSAGES.SEND_MESSAGE, async (userIdTo: number | null, message: string, token: string) => {
+            if (socket.user?.verification(token)) {
+                const userIdFrom = socket.user.get().id;
+                const result = await this.addMessage({ userIdFrom, userIdTo, message });
+                if (result) {
+                    if (userIdTo) {
+                        this.io.to(`${userIdTo}`).emit(this.MESSAGES.GET_MESSAGES_PRIVATE, this.getMessagesToUser(userIdTo));
+                        this.io.to(`${userIdFrom}`).emit(this.MESSAGES.GET_MESSAGES_PRIVATE, this.getMessagesToUser(userIdFrom));
+                    }
+                    else this.io.to('online_users').emit(this.MESSAGES.GET_MESSAGES_ALL, this.getMessagesToAll());
+                }
+            }
+        });
     }
 
     private async setMessagesToAll() {
@@ -54,17 +62,15 @@ export default class ChatManager extends Manager {
     }
 
     public getChatHash() {
-        return this.chatHash;
     }
 
     public async addMessage(newMessage: IMessageData) {
         if (await this.db.addMessage(newMessage)) {
             if (newMessage.userIdTo) {
-                this.setMessagesToUser(newMessage.userIdTo);
-                this.setMessagesToUser(newMessage.userIdFrom);
+                await this.setMessagesToUser(newMessage.userIdTo);
+                await this.setMessagesToUser(newMessage.userIdFrom);
             }
-            else this.setMessagesToAll();
-            this.chatHash = hash(Math.random());
+            else await this.setMessagesToAll();
             return true;
         };
         return false;

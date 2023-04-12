@@ -1,5 +1,9 @@
 ///////////////////////////
 ////////Users//////////////
+
+import { Socket } from "socket.io";
+import User from "./UserManager/User";
+
 ///////////////////////////
 export interface ILogin {
     login: string;
@@ -104,4 +108,8 @@ export interface IMessage extends IMessageData {
 }
 
 export type TMessages = IMessage[];
+
+export interface IUserSocket extends Socket {
+    user: User | null;
+}
 

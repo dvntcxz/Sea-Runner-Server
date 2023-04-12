@@ -11,10 +11,12 @@ export default class CONFIG{
 
     public MESSAGES: TNameArray = {
         SEND_MESSAGE: 'SEND_MESSAGE',
-        GET_MESSAGES: 'GET_MESSAGES',
+        GET_MESSAGES_ALL: 'GET_MESSAGES_ALL',
+        GET_MESSAGES_PRIVATE: 'GET_MESSAGES_PRIVATE',
         LOG_IN: 'LOG_IN',
         REGISTRATION: 'REGISTRATION',
         LOG_OUT: 'LOG_OUT',
+        GAME_LOADED: 'GAME_LOADED'
     }
 
     public MEDIATOR:{
@@ -23,7 +25,8 @@ export default class CONFIG{
         EVENTS:{
             CHANGE_USERS:'CHANGE_USERS',
             CHANGE_USER:'CHANGE_USER',
-            USER_LOG_IN: 'USER_LOG_IN'
+            USER_LOG_IN: 'USER_LOG_IN',
+            USER_LOADED: 'USER_LOADED'
         },
         TRIGGERS:{
             GET_USER_BY_TOKEN: 'GET_USER_BY_TOKEN',

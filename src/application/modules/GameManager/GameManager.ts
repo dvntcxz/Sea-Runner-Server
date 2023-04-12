@@ -1,15 +1,20 @@
 import Cache from "../Cache";
 import Manager, { IManager } from "../Manager"
-import { ICaptain, IShip } from "../Types";
+import { ICaptain, IShip, IUserSocket } from "../Types";
 import User from "../UserManager/User"
 import Captain from "./CaptainManager/Captain";
 
 export default class GameManager extends Manager {
     private captains = new Cache<Captain>;
     constructor(options: IManager) {
-        super(options)
+        super(options);
         this.loadAllShipsFromDB();
         this.loadAllCaptainsFromDB();
+        this.mediator.subscribe(this.EVENTS.USER_LOG_IN, (socket: IUserSocket) => this.loadedHandler(socket));
+    }
+
+    private loadedHandler(socket: IUserSocket){
+        socket.on(this.MESSAGES.GAME_LOADED, () => this.mediator.call(this.EVENTS.USER_LOADED, socket));
     }
 
     private async loadAllShipsFromDB() {

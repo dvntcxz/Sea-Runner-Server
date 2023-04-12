@@ -1,12 +1,8 @@
 import Cache from "../Cache";
 import Manager, { IManager } from "../Manager";
-import { IUser, IUserData, ILogin } from "../Types";
+import { IUser, IUserData, ILogin, IUserSocket } from "../Types";
 import User from "./User";
 import { Socket } from "socket.io";
-
-interface IUserSocket extends Socket {
-    user: User | null;
-}
 
 export default class UserManager extends Manager {
     private cacheUsersById = new Cache<User>;

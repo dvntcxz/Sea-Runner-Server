@@ -21,8 +21,8 @@ export default class DB {
         return this.orm.get<IUser>('users', id);
     }
 
-    public getAllUsers() {
-        return this.orm.all('users').do<TUsers>();
+    public getUserByLogin(login: string) {
+        return this.orm.get<IUser>('users', [login]);
     }
 
     public addUser(data: IUserData) {
@@ -107,5 +107,21 @@ export default class DB {
 
     public deleteUser(id: number) {
         return this.orm.delete('users', id);
+    }
+
+    /////////////////////////////
+    /////////////ITEMS///////////
+    /////////////////////////////
+
+    public addNewItem(guid: string, typeId: number){
+        return this.orm.insert('items',[{guid, typeId}])
+    }
+
+    public getItem(guid: string){
+        return this.orm.get('items',{guid});
+    }
+
+    public addItemTo(ownerId: number, cellNumber: number, guid: string){
+        return this.orm.insert('items',[{ownerId, cellNumber, guid}])
     }
 }

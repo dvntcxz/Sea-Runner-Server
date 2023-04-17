@@ -1,137 +1,72 @@
 import Cache from "../Cache";
 import Manager, { IManager } from "../Manager";
-import { IUser, IUserData, ILogin, IUserSocket } from "../Types";
 import User from "./User";
 import { Socket } from "socket.io";
 
 export default class UserManager extends Manager {
-    private cacheUsersById = new Cache<User>;
-    private cacheUsersByLogin = new Cache<User>;
+    private users = new Cache<User>;
     constructor(options: IManager) {
         super(options);
         const messages: any [] = [];
+        const {LOG_IN, LOG_OUT, REGISTRATION} = this.MESSAGES;
         //io
         if (!this.io) return;
-        this.io.on('connection', (socket: IUserSocket) => this.connectHandler(socket));
+        this.io.on('connection', (socket: Socket) => {
+            socket.on(LOG_IN, (login:string, password: string) => this.login(socket, login, password));
+            socket.on(REGISTRATION, (login:string, password: string, name: string) => this.registration(socket, login, password, name));
+            socket.on(LOG_OUT, (token: string) => this.logout(socket, token));
+            socket.on('disconnect', () => this.disconnect(socket))
+        });
 
         //Mediator Triggers
-        const { GET_USER_BY_TOKEN, GET_USER, LOG_IN, LOG_OUT, REGISTRATION, GET_ALL_USERS } = this.TRIGGERS;
-        this.mediator.set(GET_USER, (id: number) => this.getUser(id));
-        this.mediator.set(LOG_IN, (data: ILogin) => this.login(data));
-        this.mediator.set(REGISTRATION, (data: IUserData) => this.registration(data));
-        this.mediator.set(GET_ALL_USERS, () => this.getAllUsers());
+        const {GET_USER} = this.TRIGGERS;
+        this.mediator.set(GET_USER, (socketId: string) => this.getUser(socketId));
         //Mediator Events
-        const { USER_LOG_IN, CHANGE_USERS, CHANGE_USER } = this.EVENTS;
-        this.mediator.subscribe(CHANGE_USERS, () => this.loadAllUserFromDB());
-        this.mediator.subscribe(CHANGE_USER, (id: number) => this.updateUserData(id));
-        this.mediator.subscribe(USER_LOG_IN, (socket: IUserSocket) => this.logoutHandler(socket));
+        const {USER_LOG_IN} = this.EVENTS;
 
-        this.loadAllUserFromDB();
     }
 
-    private connectHandler(socket:IUserSocket): void{
-        this.registrationHandler(socket);
-        this.loginHandler(socket);
-        this.disconnectHandler(socket);
-    }
-
-    private registrationHandler(socket:IUserSocket): void{
-        socket.on(this.MESSAGES.REGISTRATION, (data: IUserData) => {
-            const result = this.registration(data);
-            socket.emit(this.MESSAGES.REGISTRATION, result);
-        });
-    }
-
-    private loginHandler(socket:IUserSocket): void{
-        socket.on(this.MESSAGES.LOG_IN, (data:ILogin) => {
-            const UserData = this.login(data);
-            if (UserData) {
-                socket.user = this.getUser(UserData.id);
-                socket.join(`${UserData.id}`);
-                socket.join(`online_users`);
-                this.mediator.call(this.EVENTS.USER_LOG_IN, socket);
+    private async login(socket: Socket, login: string, password: string){
+            const user = new User(socket.id,this.db);
+            if (await user.auth(login,password)){
+                const userData = user.get();
+                this.users.set(socket.id,user);
+                socket.emit(this.MESSAGES.LOG_IN, userData);
             }
-            socket.emit(this.MESSAGES.LOG_IN, UserData);
-        });
+            socket.emit(this.MESSAGES.LOG_IN, false);
     }
 
-    private logoutHandler(socket:IUserSocket): void{
-        socket.on(this.MESSAGES.LOG_OUT, (token: string) => {
-            if (socket.user?.verification(token)){
-                (this.logout(socket.user)) ? socket.emit(this.MESSAGES.LOG_OUT) : socket.emit(this.MESSAGES.LOG_OUT_ERROR);
+    private userOffline(user: User) {
+        this.mediator.call(this.EVENTS.USER_LOG_OUT, user);
+        this.users.remove(user.getSocketId());
+        user.logout();
+    }
+
+    public disconnect(socket: Socket){
+        const user = this.getUser(socket.id);
+        if (user) this.userOffline(user);
+    }
+
+    public getUser(socketId: string): User | null {
+        return this.users.get(socketId) || null;
+    }
+
+    public async registration(socket:Socket, login: string, password: string, name: string) {
+            const user = new User(socket.id, this.db);
+            socket.emit(this.MESSAGES.REGISTRATION, await user.registration(login, password, name));
+    }
+
+    public logout(socket: Socket, token: string): void {
+        let result = false;
+        if (token){
+            const user = this.getUser(socket.id);
+            if (user?.verification(token)) {
+                this.userOffline(user);
+                result=true;
             }
-        });
-    }
-
-    private disconnectHandler(socket:IUserSocket): void{
-        socket.on('disconnect', () => {
-            if (socket.user) {
-                this.logout(socket.user);
-                socket.leave('online_users');
-                socket.leave(`${socket.user.id}`);
-            }
-        })
-    }
-
-    public getUser(id: number): User | null {
-        return this.cacheUsersById.get(id) || null;
-    }
-
-    private getUserByLogin(login: string): User | null {
-        return this.cacheUsersByLogin.get(login) || null;;
-    }
-
-    private updateCaches(user: IUser) {
-        const cacheUser = new User(user);
-        this.cacheUsersById.set(user.id, cacheUser);
-        this.cacheUsersByLogin.set(user.login,cacheUser);
-    }
-
-    public async updateUserData(id: number) {
-        const user = await this.db.getUser(id);
-        if (user) this.updateCaches(user);
-    }
-
-    private async loadAllUserFromDB() {
-        let allUsers = await this.db.getAllUsers();
-        if (allUsers) {
-            allUsers.forEach((user) => this.updateCaches(user))
         }
+        socket.emit(this.MESSAGES.LOG_OUT, result);
     }
-
-    public async registration(data: IUserData) {
-        if (await this.db.addUser(data)) {
-            this.loadAllUserFromDB()
-            return true;
-        };
-        return false;
-    }
-
-    public login(data: ILogin) {
-        const { login, password } = data;
-        const user = this.getUserByLogin(login);
-        if (user) {
-            const data = user.auth(password);
-            if (data) {
-                this.db.setUserToken(user.id, data.token);
-            }
-            return data;
-        }
-        return false;
-    }
-
-    public logout(user: User): boolean {
-        if (user.logout()) {
-            this.db.setUserToken(user.id, null);
-            return true;
-        }
-        return false;
-    }
-
-    public getAllUsers() {
-        return Object.values(this.cacheUsersById).map(user => user.get());
-    }
-
 
 }
 

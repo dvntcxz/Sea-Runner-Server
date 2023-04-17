@@ -1,4 +1,4 @@
-import { IUser } from "../Types";
+import DB from "../DB/DB";
 import md5 from "md5";
 
 type TUserData = {
@@ -7,18 +7,12 @@ type TUserData = {
     name: string;
 }
 
-export default class User {
-    private token: string | null;
-    readonly id: number;
-    readonly login: string;
-    private password: string;
-    public name: string;
-    constructor(data: IUser) {
-        this.id = data.id;
-        this.token = data.token;
-        this.login = data.login;
-        this.password = data.password;
-        this.name = data.name;
+export default class User{
+    private token: string | null = null;
+    private id: number = 0;
+    private login: string = '';
+    public name: string = '';
+    constructor(private socketId: string, private db:DB){
     }
 
     public get() {
@@ -28,30 +22,43 @@ export default class User {
         }
     }
 
+    public getSocketId(){
+        return this.socketId;
+    }
+
+    public getId(){
+        return this.id;
+    }
+
     public verification(token:string):boolean{
         return (this.token === token);
     }
 
-    public auth(password:string):TUserData | null {
-        if (password === this.password){
-            this.token = md5(Math.random().toString());
-            return {
-                id: this.id,
-                token: this.token,
-                name: this.name
+    public async registration(login: string, password: string, name: string){
+        if (login && password && name) {
+            if (!await this.db.getUserByLogin(login)){
+                return this.db.addUser({login, password, name});
             }
         }
-        return null;
+        return false;
     }
 
-    public logout(): boolean {
-            this.token = null;
-            return true;
+    public async auth(login: string, password:string): Promise<boolean> {
+        if (login && password){
+            const userDB = await this.db.getUserByLogin(login);
+            if (userDB && password === userDB.password){
+                this.id = userDB.id;
+                this.login = userDB.login;
+                this.name = userDB.name;
+                this.token = md5(Math.random().toString());
+                await this.db.setUserToken(this.id,this.token);
+                return true;
+            }
+        }
+        return false;
     }
 
-    public updateData(data: IUser): void{
-        this.token = data.token;
-        this.password = data.password;
-        this.name = data.name;
+    public async logout(): Promise<boolean> {
+        return await this.db.setUserToken(this.id,null);
     }
 }

@@ -124,4 +124,41 @@ export default class DB {
     public addItemTo(ownerId: number, cellNumber: number, guid: string){
         return this.orm.insert('items',[{ownerId, cellNumber, guid}])
     }
+
+    public getTypesItems(){
+        return this.orm.all('typesItems');
+    }
+
+    /////////////////////////////
+    /////////////TOWNS///////////
+    /////////////////////////////
+
+    public getTowns(){
+        return this.orm.all('towns');
+    }
+
+    /////////////////////////////
+    /////////////PORTS///////////
+    /////////////////////////////
+
+    public getPorts(){
+        return this.orm.all('ports');
+    }
+
+    /////////////////////////////
+    /////////////FORTS///////////
+    /////////////////////////////
+
+    public getForts(){
+        return this.orm.all('forts');
+    }
+
+    //typesItems и alliances
+    /////////////////////////////
+    /////////////ALLIANCES///////////
+    /////////////////////////////
+
+    public getAlliances(){
+        return this.orm.all('alliances');
+    }
 }

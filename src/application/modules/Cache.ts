@@ -30,8 +30,6 @@ export default class Cache<T>{
     }
 
     public forAll(func: Function) {
-        for (let value of Object.values(this.cache)) {
-            func(value);
-        }
+        Object.values(this.cache).forEach((value: T) => func(value));
     }
 }

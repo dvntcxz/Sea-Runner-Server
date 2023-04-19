@@ -1,78 +1,66 @@
+import { Socket } from "socket.io";
+import Cache from "../Cache";
 import Manager, { IManager } from "../Manager";
-import { IMessage, TMessages, IMessageData, IUserSocket } from "../Types";
+import Room from "./Room";
 
 export default class ChatManager extends Manager {
-    private cacheUserMessages: {
-        [userId: number]: TMessages
-    } = {};
-    private cacheAllMessages: TMessages = [];
+    private rooms = new Cache<Room>;
+    private globalChatRoomGuid = '';
+    private allianceChatRoomGuid = {
+        1:'',
+        2:'',
+        3:''
+    }
+
     constructor(options: IManager) {
         super(options)
         if (!this.io) return;
-        const { GET_MESSAGES_ALL, GET_MESSAGES, GET_CHAT_HASH, ADD_MESSAGE } = this.mediator.getTriggersNames();
-        this.mediator.set(GET_MESSAGES, (id: number) => this.getAllMessagesToUser(id));
-        this.mediator.set(ADD_MESSAGE, (newMessage: IMessageData) => this.addMessage(newMessage));
-        this.mediator.set(GET_CHAT_HASH, () => this.getChatHash());
-        this.mediator.subscribe(this.EVENTS.USER_LOADED, (socket: IUserSocket) => this.sendMessageHandler(socket))
-        this.setMessagesToAll();
-    }
-
-    private sendMessageHandler(socket: IUserSocket) {
-        if (socket.user) {
-            socket.emit(this.MESSAGES.GET_MESSAGES_ALL, this.getMessagesToAll());
-            socket.emit(this.MESSAGES.GET_MESSAGES_PRIVATE, this.getMessagesToUser(socket.user.get().id))
-        }
-        socket.on(this.MESSAGES.SEND_MESSAGE, async (userIdTo: number | null, message: string, token: string) => {
-            if (socket.user?.verification(token)) {
-                const userIdFrom = socket.user.get().id;
-                const result = await this.addMessage({ userIdFrom, userIdTo, message });
-                if (result) {
-                    if (userIdTo) {
-                        this.io.to(`${userIdTo}`).emit(this.MESSAGES.GET_MESSAGES_PRIVATE, this.getMessagesToUser(userIdTo));
-                        this.io.to(`${userIdFrom}`).emit(this.MESSAGES.GET_MESSAGES_PRIVATE, this.getMessagesToUser(userIdFrom));
-                    }
-                    else this.io.to('online_users').emit(this.MESSAGES.GET_MESSAGES_ALL, this.getMessagesToAll());
-                }
-            }
+        const {SEND_MESSAGE, JOIN_ROOM, CREATE_PRIVATE_ROOM, GET_PRIVATE_ROOM} = this.MESSAGES;
+        this.io.on('connection', (socket:Socket)=>{
+            socket.on(SEND_MESSAGE,async (token: string, message: string, roomGuid: string)=>await this.sendMessage(socket,token, message, roomGuid));
+            socket.on(JOIN_ROOM,async (token: string, roomGuid: string)=>await this.joinRoom(socket,token, roomGuid));
         });
     }
 
-    private async setMessagesToAll() {
-        this.cacheAllMessages = await this.db.getMessagesToAll();
+    private getRoom(roomGuid: string){
+        return this.rooms.get(roomGuid);
     }
 
-    private async setMessagesToUser(userId: number) {
-        this.cacheUserMessages[userId] = await this.db.getMessagesToUser(userId);
-    }
-
-    public getMessagesToUser(userId: number): TMessages {
-        return this.cacheUserMessages[userId];
-    }
-
-    public getMessagesToAll(): TMessages {
-        return this.cacheAllMessages;
-    }
-
-    public getAllMessagesToUser(userId: number) {
-        if (this.cacheUserMessages[userId]) {
-            this.setMessagesToUser(userId);
-        }
-        const messages = this.getMessagesToAll().concat(this.getMessagesToUser(userId));
-        return messages.sort((a, b) => a.id - b.id);
-    }
-
-    public getChatHash() {
-    }
-
-    public async addMessage(newMessage: IMessageData) {
-        if (await this.db.addMessage(newMessage)) {
-            if (newMessage.userIdTo) {
-                await this.setMessagesToUser(newMessage.userIdTo);
-                await this.setMessagesToUser(newMessage.userIdFrom);
+    public async joinRoom(socket: Socket, token: string, roomGuid: string){
+        if (token){
+            let messages = [];
+            const user = this.mediator.get(this.TRIGGERS.GET_USER, socket.id);
+            if (user && user.verification(token)){
+                const room = this.getRoom(roomGuid);
+                if (room) {
+                    socket.join(room.getId().toString());
+                    messages = await room.getMessages();
+                }
+                else
+                {
+                    const newRoom = new Room(this.db);
+                    await newRoom.init(roomGuid);
+                    this.rooms.set(roomGuid, newRoom);
+                    messages = await newRoom.getMessages();
+                }
+                socket.emit('GET_MESSAGES', messages);
             }
-            else await this.setMessagesToAll();
-            return true;
-        };
-        return false;
+        }
     }
+
+    public async sendMessage(socket: Socket, token: string, message: string, roomGuid: string){
+        if (token && message){
+            const user = this.mediator.get(this.TRIGGERS.GET_USER, socket.id);
+            if (user && user.verification(token)){
+                const room = this.getRoom(roomGuid);
+                if (room && await room.verification(user)) {
+                    const messages = await room.addMessage(user,message);
+                    socket.to(room.getId().toString()).emit(this.MESSAGES.GET_MESSAGES, messages);
+                };
+            }
+        }
+    }
+
+
+
 }

@@ -46,7 +46,7 @@ export default class SQLQuery{
 
     run(){
         return new Promise<boolean>((resolve) => {
-            this.db.all(this.query,this.values,
+            this.db.run(this.query,this.values,
                 (error: Error) => resolve(!error))
         });
     }

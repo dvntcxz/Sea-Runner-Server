@@ -37,7 +37,7 @@ export default class User{
     public async registration(login: string, password: string, name: string){
         if (login && password && name) {
             if (!await this.db.getUserByLogin(login)){
-                return this.db.addUser({login, password, name});
+                return await this.db.addUser({login, password, name});
             }
         }
         return false;
@@ -45,11 +45,11 @@ export default class User{
 
     public async auth(login: string, password:string): Promise<boolean> {
         if (login && password){
-            const userDB = await this.db.getUserByLogin(login);
-            if (userDB && password === userDB.password){
-                this.id = userDB.id;
-                this.login = userDB.login;
-                this.name = userDB.name;
+            const user = await this.db.getUserByLogin(login);
+            if (user && password === user.password){
+                this.id = user.id;
+                this.login = user.login;
+                this.name = user.name;
                 this.token = md5(Math.random().toString());
                 await this.db.setUserToken(this.id,this.token);
                 return true;

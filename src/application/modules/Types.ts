@@ -113,3 +113,8 @@ export interface IUserSocket extends Socket {
     user: User | null;
 }
 
+export type TRoom = {
+    guid: string;
+    type: string;
+}
+

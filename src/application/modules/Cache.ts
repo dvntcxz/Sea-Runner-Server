@@ -13,7 +13,7 @@ export default class Cache<T>{
         this.cache[key] = value;
     }
 
-    public get(key: Key): T {
+    public get(key: Key): T | null{
         return this.cache[key];
     }
 

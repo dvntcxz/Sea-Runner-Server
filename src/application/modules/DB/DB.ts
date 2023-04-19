@@ -1,6 +1,6 @@
 import { Database } from 'sqlite3';
 import ORM from './ORM';
-import { IUser, TUsers, TShips, IUserData, TMessages, IMessageData, IShipData, ICaptainData, TCaptainData, ICaptain, TCaptains } from '../Types';
+import { IUser, TUsers, TShips, IUserData, TMessages, IMessageData, IShipData, ICaptainData, TCaptainData, ICaptain, TCaptains, TRoom } from '../Types';
 
 export default class DB {
     private db;
@@ -22,11 +22,11 @@ export default class DB {
     }
 
     public getUserByLogin(login: string) {
-        return this.orm.get<IUser>('users', [login]);
+        return this.orm.get<IUser>('users', {login});
     }
 
     public addUser(data: IUserData) {
-        return this.orm.insert('users',[data]).do();
+        return this.orm.insert('users',[data]).run();
     }
 
     public setUserToken(userId: number, token: string | null) {
@@ -42,7 +42,7 @@ export default class DB {
     ////////////////////////////
 
     public addCaptain(captain: ICaptainData) {
-        return this.orm.insert('captains', [captain]).do();
+        return this.orm.insert('captains', [captain]).run();
     }
 
     public getCaptain(userId: number) {
@@ -50,7 +50,7 @@ export default class DB {
     }
 
     public getCaptains() {
-        return this.orm.all('captains').do<TCaptains>();
+        return this.orm.all('captains').all<TCaptains>();
     }
 
     public updateCaptain(userId: number, captain: TCaptainData) {
@@ -62,7 +62,7 @@ export default class DB {
     ////////////////////////////
 
     public addShip(ship: IShipData) {
-        return this.orm.insert('ships', [ship]).do();
+        return this.orm.insert('ships', [ship]).run();
     }
 
     public updateShip(userId: number) {
@@ -70,7 +70,7 @@ export default class DB {
     }
 
     public getShips() {
-        return this.orm.all('ships').do<TShips>();
+        return this.orm.all('ships').all<TShips>();
     }
 
 
@@ -78,23 +78,36 @@ export default class DB {
     //Chat//
     ////////
 
-    public getMessagesToUser(userId: number) {
+    public getMessages(roomGuid: string) {
         return new Promise<TMessages>((resolve) => {
-            this.db.all('SELECT * FROM messages WHERE userIdTo=? or (userIdFrom=? AND userIdTo is NOT NULL)',
-                [userId],
+            this.db.all('SELECT messages.userIdFrom, users.name, messages.message, rooms.type FROM messages,users, rooms WHERE users.id = messages.userIdFrom AND rooms.guid = messages.roomGuid AND messages.roomGuid=? ',
+                [roomGuid],
                 (error: any, rows: any) => resolve((error ? [] : rows)))
         });
     }
 
-    public getMessagesToAll() {
-        return new Promise<TMessages>((resolve) => {
-            this.db.all('SELECT * FROM messages WHERE userIdTo is NULL',
-                (error: any, rows: any) => resolve((error ? [] : rows)))
-        });
+    public getRoom(guid: string){
+        return this.orm.get<TRoom>('rooms',{guid});
     }
 
-    public addMessage(newMessage: IMessageData) {
-        return this.orm.insert('messages', [newMessage]).do();
+    public addRoom(guid:string, type: string){
+        return this.orm.insert('rooms', [{guid, type}]).run()
+    }
+
+    public addUserToRoom(roomGuid: string, userId: number){
+        return this.orm.insert('roomsUsers', [{roomGuid, userId}]).run()
+    }
+
+    public getRoomUserById(roomGuid: string, userId: number){
+        return this.orm.get<string>('roomsUsers', {roomGuid, userId});
+    }
+
+    public getPrivateRoom(userId_1: number, userId_2: number){
+        return 1;
+    }
+
+    public addMessage(roomGuid: string, userIdFrom: number, message: string) {
+        return this.orm.insert('messages', [{roomGuid, userIdFrom, message}]).run();
     }
 
     public editMessage(id: number, message: string) {

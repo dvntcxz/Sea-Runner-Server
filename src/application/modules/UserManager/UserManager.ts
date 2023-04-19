@@ -28,6 +28,7 @@ export default class UserManager extends Manager {
 
     private async login(socket: Socket, login: string, password: string){
             const user = new User(socket.id,this.db);
+            console.log(login, password);
             if (await user.auth(login,password)){
                 const userData = user.get();
                 this.users.set(socket.id,user);

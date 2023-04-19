@@ -1,11 +1,7 @@
 import { Database } from "sqlite3";
 import SQLQuery from "./SQLQuery";
 export default class ORM {
-    private sqlQueryManager;
-
     constructor(private db: Database) {
-        this.db = db;
-        this.sqlQueryManager = new SQLQuery(this.db);
     }
 
     private getValuesParams(conditions: object | number, operand: string) {
@@ -36,15 +32,14 @@ export default class ORM {
 
     get<T>(table: string, conditions: object | number, fields: string = '*', operand: string = 'AND') {
         const { values, params } = this.getValuesParams(conditions, operand);
-        const query = `SELECT ${fields} FROM ${table} WHERE ${params}`;
+        const query = `SELECT ${fields} FROM ${table} WHERE${params}`;
         return new Promise<T | null>((resolve) =>
-            this.db.run(query, values, (error: Error, row: any) => resolve(error ? null : row)));
+            this.db.get(query, values, (error: Error, row: any) => resolve(error ? null : row)));
     }
 
     all(table: string, fields: string = '*'){
-        const {db, orderBy,limit,offset,conditions, all} = this.sqlQueryManager;
         const query = `SELECT ${fields} FROM ${table}`;
-        return {db, query, values: [], orderBy, limit, offset, conditions, do: all};
+        return new SQLQuery(this.db, query);
     }
 
     update(table: string, conditions: object | number, fields: object, operand: string = 'AND') {
@@ -58,10 +53,9 @@ export default class ORM {
     }
 
     insert(table: string, fields: object []) {
-        const {db, run} = this.sqlQueryManager;
         const {fieldsNames, values, valuesMask} = this.getValuesAndNameFields(fields);
         let query:string = `INSERT INTO ${table} (${fieldsNames.join(', ')}) VALUES ${valuesMask.join(', ')}`;
-        return {db, query, values, do: run};
+        return new SQLQuery(this.db, query,values)
     }
 
     delete(table: string, conditions: object | number, operand: string = 'AND') {

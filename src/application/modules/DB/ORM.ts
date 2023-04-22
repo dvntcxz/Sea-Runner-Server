@@ -1,7 +1,8 @@
-import { Database } from "sqlite3";
+import { Client } from "pg";
 import SQLQuery from "./SQLQuery";
+
 export default class ORM {
-    constructor(private db: Database) {
+    constructor(private db: Client) {
     }
 
     private getValuesParams(conditions: object | number, operand: string) {
@@ -18,16 +19,16 @@ export default class ORM {
         return { values, params };
     }
 
-    private getValuesAndNameFields(fields: object []){
-            const fieldsNames = Object.keys(fields[0]);
-            const fieldsValues = `(${fieldsNames.map(() => '?').join(', ')})`
-            let values: any[] = [];
-            const valuesMask: string [] = [];
-            fields.forEach((obj:object) => {
-                values = [...values, ...Object.values(obj)];
-                valuesMask.push(fieldsValues);
-            })
-            return {values, fieldsNames, valuesMask};
+    private getValuesAndNameFields(fields: object[]) {
+        const fieldsNames = Object.keys(fields[0]);
+        const fieldsValues = `(${fieldsNames.map(() => '?').join(', ')})`
+        let values: any[] = [];
+        const valuesMask: string[] = [];
+        fields.forEach((obj: object) => {
+            values = [...values, ...Object.values(obj)];
+            valuesMask.push(fieldsValues);
+        })
+        return { values, fieldsNames, valuesMask };
     }
 
     get<T>(table: string, conditions: object | number, fields: string = '*', operand: string = 'AND') {
@@ -37,7 +38,7 @@ export default class ORM {
             this.db.get(query, values, (error: Error, row: any) => resolve(error ? null : row)));
     }
 
-    all(table: string, fields: string = '*'){
+    all(table: string, fields: string = '*') {
         const query = `SELECT ${fields} FROM ${table}`;
         return new SQLQuery(this.db, query);
     }
@@ -52,10 +53,10 @@ export default class ORM {
         });
     }
 
-    insert(table: string, fields: object []) {
-        const {fieldsNames, values, valuesMask} = this.getValuesAndNameFields(fields);
-        let query:string = `INSERT INTO ${table} (${fieldsNames.join(', ')}) VALUES ${valuesMask.join(', ')}`;
-        return new SQLQuery(this.db, query,values)
+    insert(table: string, fields: object[]) {
+        const { fieldsNames, values, valuesMask } = this.getValuesAndNameFields(fields);
+        let query: string = `INSERT INTO ${table} (${fieldsNames.join(', ')}) VALUES ${valuesMask.join(', ')}`;
+        return new SQLQuery(this.db, query, values)
     }
 
     delete(table: string, conditions: object | number, operand: string = 'AND') {

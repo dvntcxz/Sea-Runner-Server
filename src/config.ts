@@ -6,7 +6,12 @@ export default class CONFIG{
     public PORT:number = 3001;
 
     DB_CONNECT = {
-        NAME: './application/modules/DB/SeaRunner.db'
+
+        HOST: 'localhost',
+        PORT: 5433,
+        NAME: 'SeaRunner.db',
+        USER: 'postgres',
+        PASS: '111'
     }
 
     public MESSAGES: TNameArray = {

@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import http from 'http';
-import {Server} from 'socket.io';
+import { Server } from 'socket.io';
 
 const app = express();
 const server = http.createServer(app);
@@ -22,7 +22,7 @@ import GameManager from './application/modules/GameManager/GameManager';
 const { PORT, MEDIATOR, DB_CONNECT, MESSAGES } = new CONFIG;
 
 const mediator = new Mediator(MEDIATOR.EVENTS, MEDIATOR.TRIGGERS);
-const db = new DB(DB_CONNECT);
+const db = new DB({ ...DB_CONNECT, initCb });
 new UserManager({ mediator, db, io, MESSAGES });
 new ChatManager({ mediator, db, io, MESSAGES });
 new GameManager({ mediator, db, io, MESSAGES });
@@ -32,5 +32,15 @@ app.use(cors({
 app.use(express.static('public'));
 app.use(Router(mediator));
 
+function initCb() {
+    mediator.call(MEDIATOR.EVENTS.INIT_DATABASE);
+}
+
+const deinitModules = () => {
+    db.destructor();
+    setTimeout(() => process.exit(), 500);
+}
+
 server.listen(PORT, () => console.log('It works with socket!!!'));
 
+process.on('SIGINT', deinitModules); //CTRL + C

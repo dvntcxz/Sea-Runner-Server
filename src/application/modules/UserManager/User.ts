@@ -1,5 +1,7 @@
+import ActiveRecord from "../ActiveRecord";
 import DB from "../DB/DB";
 import md5 from "md5";
+import { Tables } from "../Types";
 
 type TUserData = {
     id: number;
@@ -7,12 +9,12 @@ type TUserData = {
     name: string;
 }
 
-export default class User{
+export default class User extends ActiveRecord{
     private token: string | null = null;
-    private id: number = 0;
     private login: string = '';
     public name: string = '';
-    constructor(private socketId: string, private db:DB){
+    constructor(private socketId: string,db:DB){
+        super(db, Tables.users);
     }
 
     public get() {
@@ -58,7 +60,7 @@ export default class User{
         return false;
     }
 
-    public async logout(): Promise<boolean> {
-        return await this.db.setUserToken(this.id,null);
+    public async logout(){
+
     }
 }

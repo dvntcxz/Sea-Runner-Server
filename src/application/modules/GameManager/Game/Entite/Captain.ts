@@ -1,6 +1,6 @@
-import Cache from "../Cache";
-import DB from "../DB/DB";
-import { ICaptain, IShip } from "../Types";
+import Cache from "../../../Cache";
+import DB from "../../../DB/DB";
+import { ICaptain, IShip } from "../../../Types";
 
 export default class Captain{
     private id = 0;

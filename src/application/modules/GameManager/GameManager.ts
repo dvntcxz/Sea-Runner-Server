@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
 import Cache from "../Cache";
 import Manager, { IManager } from "../Manager"
-import Captain from "./Captain";
+import Captain from "./Game/Entite/Captain";
 import Game from "./Game/Game";
 
 export default class GameManager extends Manager {

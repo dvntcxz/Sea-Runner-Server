@@ -6,10 +6,9 @@ export default class CONFIG{
     public PORT:number = 3001;
 
     DB_CONNECT = {
-
         HOST: 'localhost',
-        PORT: 5433,
-        NAME: 'SeaRunner.db',
+        PORT: 5432,
+        NAME: 'SeaRunner',
         USER: 'postgres',
         PASS: '111'
     }

@@ -1,68 +1,100 @@
 import { Client } from "pg";
-import SQLQuery from "./SQLQuery";
+
+type TQuery = {
+    query: string,
+    values: any [],
+    run: Function
+}
 
 export default class ORM {
     constructor(private db: Client) {
     }
 
+    private sqlQuery(query: string, values: any [] = []){
+        const sqlQuery = {
+            query: query,
+            values: values,
+            where: (conditions: object) => this.where(sqlQuery,conditions),
+            run: () => this.run(sqlQuery.query, sqlQuery.values)
+        }
+        return sqlQuery;
+    }
+
+    async run(query: string, values: any []){
+        try {
+            const result = await this.db.query(query, values);
+            return (result.rows[0]) ? (result.rowCount === 1) ? result.rows[0] : result.rows : null;
+        }
+        catch (error){
+            return null;
+        }
+    }
+
+    where(sqlQuery: TQuery, conditions: object): TQuery{
+        const {values, params} = this.getValuesParams(conditions, 'AND');
+        sqlQuery.query += ` WHERE ${params}`;
+        sqlQuery.values = sqlQuery.values.concat(values);
+        return sqlQuery;
+    }
+
+    select(table: string, fields: string = '*') {
+        const query = `SELECT ${fields} FROM ${table}`;
+        return this.sqlQuery(query);
+    }
+
+    update(table: string, fields: object) {
+        let i = 0;
+        const values = Object.values(fields);
+        const argums = Object.keys(fields).map(key => {
+            i++;
+            return  `${key}=${i}`;
+        }).join(', ');
+        const query = `UPDATE ${table} SET ${argums}`;
+        return this.sqlQuery(query, values);
+    }
+
+    delete(table: string) {
+        const query = `DELETE FROM ${table}`;
+        return this.sqlQuery(query);
+    }
+
+    insert(table: string,records:object []){
+        const { fieldsNames, values, valuesMask } = this.getValuesAndNameFields(records);
+        let query: string = `INSERT INTO ${table} (${fieldsNames.join(', ')}) VALUES ${valuesMask.join(', ')} RETURNING`;
+        return {run: () => this.run(query, values)}
+    }
+
     private getValuesParams(conditions: object | number, operand: string) {
         let params: string;
         let values: any[];
-        if (typeof conditions === 'number') {
-            params = ' id=? ';
-            values = [conditions];
-        }
-        else {
-            params = Object.keys(conditions).map(key => ` ${key}=? `).join(operand);
-            values = Object.values(conditions);
-        }
+        let i = 0;
+        params = Object.keys(conditions).map(key =>{
+        i++
+        return ` ${key}=$${i} `;
+    }).join(operand);
+        values = Object.values(conditions);
         return { values, params };
     }
 
     private getValuesAndNameFields(fields: object[]) {
         const fieldsNames = Object.keys(fields[0]);
-        const fieldsValues = `(${fieldsNames.map(() => '?').join(', ')})`
+        let i=0;
         let values: any[] = [];
         const valuesMask: string[] = [];
         fields.forEach((obj: object) => {
+            const fieldsValues = `(${fieldsNames.map(() => {
+                i++;
+                return `$${i}`
+            }).join(', ')})`
             values = [...values, ...Object.values(obj)];
             valuesMask.push(fieldsValues);
         })
         return { values, fieldsNames, valuesMask };
     }
 
-    get<T>(table: string, conditions: object | number, fields: string = '*', operand: string = 'AND') {
-        const { values, params } = this.getValuesParams(conditions, operand);
-        const query = `SELECT ${fields} FROM ${table} WHERE${params}`;
-        return new Promise<T | null>((resolve) =>
-            this.db.get(query, values, (error: Error, row: any) => resolve(error ? null : row)));
-    }
 
-    all(table: string, fields: string = '*') {
-        const query = `SELECT ${fields} FROM ${table}`;
-        return new SQLQuery(this.db, query);
-    }
 
-    update(table: string, conditions: object | number, fields: object, operand: string = 'AND') {
-        const { values, params } = this.getValuesParams(conditions, operand);
-        const valuefields = Object.values(fields);
-        const argums = Object.keys(fields).map(key => `${key}=?`).join(', ');
-        const query = `UPDATE ${table} SET ${argums} WHERE${params}`;
-        return new Promise<boolean>((resolve) => {
-            this.db.run(query, valuefields.concat(values), (error: Error) => resolve(!error))
-        });
-    }
 
-    insert(table: string, fields: object[]) {
-        const { fieldsNames, values, valuesMask } = this.getValuesAndNameFields(fields);
-        let query: string = `INSERT INTO ${table} (${fieldsNames.join(', ')}) VALUES ${valuesMask.join(', ')}`;
-        return new SQLQuery(this.db, query, values)
-    }
 
-    delete(table: string, conditions: object | number, operand: string = 'AND') {
-        const { values, params } = this.getValuesParams(conditions, operand);
-        const query = `DELETE FROM ${table} WHERE ${params}`;
-        return new Promise<boolean>((resolve) =>
-            this.db.run(query, values, (error: Error) => resolve(!error)));
-    }
+
 }

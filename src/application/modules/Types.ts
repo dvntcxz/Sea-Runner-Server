@@ -4,6 +4,17 @@
 import { Socket } from "socket.io";
 import User from "./UserManager/User";
 
+/////////////////////////////////////
+///////////////DB////////////////////
+/////////////////////////////////////
+
+export enum Tables {
+    users = 'users',
+    messages = 'messages',
+    captain = 'captain'
+}
+
+
 ///////////////////////////
 export interface ILogin {
     login: string;

@@ -2,13 +2,6 @@ import DB from "../../../application/modules/DB/DB";
 import CONFIG from "../../../config";
 import User from "../../../application/modules/UserManager/User";
 
-function randomString(i: number) {
-    var rnd = '';
-    while (rnd.length < i) 
-        rnd += Math.random().toString(36).substring(2);
-    return rnd.substring(0, i);
-};
-
 const initCb = () => {}
 
 describe('User.auth', () => {

@@ -21,7 +21,8 @@ export type TAttribute = {
 export enum Tables {
     users = 'users',
     messages = 'messages',
-    captain = 'captain'
+    captains = 'captains',
+    towns = 'towns'
 }
 
 export enum UserAttributes{

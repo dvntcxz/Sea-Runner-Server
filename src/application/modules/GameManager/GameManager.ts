@@ -9,12 +9,14 @@ export default class GameManager extends Manager {
     private game;
     constructor(options: IManager) {
         super(options);
-        this.game = new Game(this.db);
-        this.mediator.subscribe(this.EVENTS.USER_LOG_IN, (socket: Socket) => this.loadedHandler(socket));
+        this.io.on((socket:Socket) => {
+            socket.on(this.MESSAGES.GAME_LOADED, (answer: Function) => this.gameLoaded(answer));
+        })
+        this.game = new Game(this.db, this.mediator);
     }
 
-    private loadedHandler(socket: Socket){
-        socket.on(this.MESSAGES.GAME_LOADED, () => this.mediator.call(this.EVENTS.USER_LOADED, socket));
+    public gameLoaded(answer: Function){
+        answer();
     }
 
     ////////////////////////////
@@ -50,5 +52,12 @@ export default class GameManager extends Manager {
         const result = [];
         Object.values(this.captains.getAll()).
             forEach((captain: Captain) => result.push(captain.getData()))
+    }
+
+    ////////////////////////////
+    ////////////TOWN////////////
+    ////////////////////////////
+    public getTown(){
+
     }
 }

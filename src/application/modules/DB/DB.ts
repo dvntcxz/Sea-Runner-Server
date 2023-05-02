@@ -61,16 +61,16 @@ export default class DB {
     //////////USER//////////////
     ////////////////////////////
 
-    public getUserByLogin(login: string) {
-        return this.orm.select('users').where({login}).run()
+    public async getUserByLogin(login: string) {
+        return await this.orm.select('users').where({login}).run()
     }
 
     public async addUser(data: IUserData) {
         return await this.orm.insert('users', [data]).run();
     }
 
-    public setUserToken(userId: number, token: string | null) {
-        //return this.orm.update('users', userId, { token });
+    public setUserToken(id: number, token: string | null) {
+        return this.orm.update('users',{token}).where({id});
     }
 
     public async updateUser(id: number, field: object) {

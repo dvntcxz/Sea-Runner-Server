@@ -7,7 +7,6 @@ export default class UserManager extends Manager {
     private users = new Cache<User>;
     constructor(options: IManager) {
         super(options);
-        const messages: any [] = [];
         const {LOG_IN, LOG_OUT, REGISTRATION} = this.MESSAGES;
         //io
         if (!this.io) return;
@@ -17,7 +16,6 @@ export default class UserManager extends Manager {
             socket.on(LOG_OUT, (token: string, cbLogout: Function) => this.logout(socket, token, cbLogout));
             socket.on('disconnect', () => this.disconnect(socket))
         });
-
         //Mediator Triggers
         const {GET_USER} = this.TRIGGERS;
         this.mediator.set(GET_USER, (socketId: string) => this.getUser(socketId));

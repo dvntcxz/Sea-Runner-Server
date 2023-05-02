@@ -1,8 +1,9 @@
 import { Client } from "pg";
+import { TUser } from "../Types";
 
 type TQuery = {
     query: string,
-    values: any [],
+    values: any[],
     run: Function
 }
 
@@ -10,28 +11,28 @@ export default class ORM {
     constructor(private db: Client) {
     }
 
-    private sqlQuery(query: string, values: any [] = []){
+    private sqlQuery(query: string, values: any[] = []) {
         const sqlQuery = {
             query: query,
             values: values,
-            where: (conditions: object) => this.where(sqlQuery,conditions),
+            where: (conditions: object) => this.where(sqlQuery, conditions),
             run: () => this.run(sqlQuery.query, sqlQuery.values)
         }
         return sqlQuery;
     }
 
-    async run(query: string, values: any []){
+    async run(query: string, values: any[]): Promise<TUser | null> {
         try {
             const result = await this.db.query(query, values);
             return (result.rows[0]) ? (result.rowCount === 1) ? result.rows[0] : result.rows : null;
         }
-        catch (error){
+        catch (error) {
             return null;
         }
     }
 
-    where(sqlQuery: TQuery, conditions: object): TQuery{
-        const {values, params} = this.getValuesParams(conditions, 'AND');
+    where(sqlQuery: TQuery, conditions: object): TQuery {
+        const { values, params } = this.getValuesParams(conditions, 'AND', sqlQuery.values.length);
         sqlQuery.query += ` WHERE ${params}`;
         sqlQuery.values = sqlQuery.values.concat(values);
         return sqlQuery;
@@ -47,7 +48,7 @@ export default class ORM {
         const values = Object.values(fields);
         const argums = Object.keys(fields).map(key => {
             i++;
-            return  `${key}=${i}`;
+            return `${key}=${i}`;
         }).join(', ');
         const query = `UPDATE ${table} SET ${argums}`;
         return this.sqlQuery(query, values);
@@ -58,27 +59,27 @@ export default class ORM {
         return this.sqlQuery(query);
     }
 
-    insert(table: string,records:object []){
+    insert(table: string, records: object[]) {
         const { fieldsNames, values, valuesMask } = this.getValuesAndNameFields(records);
         let query: string = `INSERT INTO ${table} (${fieldsNames.join(', ')}) VALUES ${valuesMask.join(', ')} RETURNING *`;
-        return {run: () => this.run(query, values)}
+        return { run: () => this.run(query, values) }
     }
 
-    private getValuesParams(conditions: object | number, operand: string) {
+    private getValuesParams(conditions: object | number, operand: string, index: number = 0) {
         let params: string;
         let values: any[];
-        let i = 0;
-        params = Object.keys(conditions).map(key =>{
-        i++
-        return ` ${key}=$${i} `;
-    }).join(operand);
+        let i = index;
+        params = Object.keys(conditions).map(key => {
+            i++
+            return ` ${key}=$${i} `;
+        }).join(operand);
         values = Object.values(conditions);
         return { values, params };
     }
 
     private getValuesAndNameFields(fields: object[]) {
         const fieldsNames = Object.keys(fields[0]);
-        let i=0;
+        let i = 0;
         let values: any[] = [];
         const valuesMask: string[] = [];
         fields.forEach((obj: object) => {

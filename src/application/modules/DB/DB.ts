@@ -1,6 +1,6 @@
 import { Client } from 'pg';
 import ORM from './ORM';
-import { IUser, TUsers, TShips, IUserData, TMessages, IMessageData, IShipData, ICaptainData, TCaptainData, ICaptain, TCaptains, TRoom, Tables } from '../Types';
+import { IUser, TUsers, TShips, IUserData, TMessages, IMessageData, IShipData, ICaptainData, TCaptainData, ICaptain, TCaptains, TRoom, Tables, TAttributes } from '../Types';
 
 export default class DB {
     private db: Client | null;
@@ -54,7 +54,7 @@ export default class DB {
     }
 
     public async addRecord(table: Tables, data: object){
-        return await this.orm.insert(table,[{data}]).run();
+        return await this.orm.insert(table,[{...data}]).run();
     }
 
     ////////////////////////////

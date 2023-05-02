@@ -60,7 +60,7 @@ export default class ORM {
 
     insert(table: string,records:object []){
         const { fieldsNames, values, valuesMask } = this.getValuesAndNameFields(records);
-        let query: string = `INSERT INTO ${table} (${fieldsNames.join(', ')}) VALUES ${valuesMask.join(', ')} RETURNING`;
+        let query: string = `INSERT INTO ${table} (${fieldsNames.join(', ')}) VALUES ${valuesMask.join(', ')} RETURNING *`;
         return {run: () => this.run(query, values)}
     }
 

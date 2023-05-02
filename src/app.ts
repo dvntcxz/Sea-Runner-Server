@@ -23,7 +23,7 @@ const { PORT, MEDIATOR, DB_CONNECT, MESSAGES } = new CONFIG;
 
 const mediator = new Mediator(MEDIATOR.EVENTS, MEDIATOR.TRIGGERS);
 const db = new DB({ ...DB_CONNECT, initCb });
-//new UserManager({ mediator, db, io, MESSAGES });
+new UserManager({ mediator, db, io, MESSAGES });
 //new ChatManager({ mediator, db, io, MESSAGES });
 //new GameManager({ mediator, db, io, MESSAGES });
 app.use(cors({
@@ -37,10 +37,10 @@ function initCb() {
 }
 
 const deinitModules = () => {
-    //db.destructor();
+    db.destructor();
     setTimeout(() => process.exit(), 500);
 }
 
 server.listen(PORT, () => console.log('It works with socket!!!'));
 
-process.on('SIGINT', deinitModules); //CTRL + C
+process.on('SIGINT', deinitModules);

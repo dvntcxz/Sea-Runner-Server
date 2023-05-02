@@ -12,9 +12,9 @@ export default class UserManager extends Manager {
         //io
         if (!this.io) return;
         this.io.on('connection', (socket: Socket) => {
-            socket.on(LOG_IN, (login:string, password: string) => this.login(socket, login, password));
-            socket.on(REGISTRATION, (login:string, password: string, name: string) => this.registration(socket, login, password, name));
-            socket.on(LOG_OUT, (token: string) => this.logout(socket, token));
+            socket.on(LOG_IN, (login:string, password: string, cbLogin: Function) => this.login(socket, login, password, cbLogin));
+            socket.on(REGISTRATION, (login:string, password: string, name: string, cbRegistration: Function) => this.registration(socket, login, password, name, cbRegistration));
+            socket.on(LOG_OUT, (token: string, cbLogout: Function) => this.logout(socket, token, cbLogout));
             socket.on('disconnect', () => this.disconnect(socket))
         });
 
@@ -22,19 +22,16 @@ export default class UserManager extends Manager {
         const {GET_USER} = this.TRIGGERS;
         this.mediator.set(GET_USER, (socketId: string) => this.getUser(socketId));
         //Mediator Events
-        const {USER_LOG_IN} = this.EVENTS;
-
     }
 
-    private async login(socket: Socket, login: string, password: string){
-            const user = new User(socket.id,this.db);
-            console.log(login, password);
-            if (await user.auth(login,password)){
-                const userData = user.get();
-                this.users.set(socket.id,user);
-                socket.emit(this.MESSAGES.LOG_IN, userData);
-            }
-            socket.emit(this.MESSAGES.LOG_IN, false);
+    private async login(socket: Socket, login: string, password: string, cbLogin: Function){
+        const user = new User(socket.id,this.db);
+        if (await user.auth(login,password)){
+            const userData = user.getClientData();
+            this.users.set(socket.id,user);
+            cbLogin(userData);
+        }
+        else cbLogin(null);
     }
 
     private userOffline(user: User) {
@@ -52,12 +49,12 @@ export default class UserManager extends Manager {
         return this.users.get(socketId) || null;
     }
 
-    public async registration(socket:Socket, login: string, password: string, name: string) {
+    public async registration(socket:Socket, login: string, password: string, name: string, cbRegistration: Function) {
             const user = new User(socket.id, this.db);
-            socket.emit(this.MESSAGES.REGISTRATION, await user.registration(login, password, name));
+            cbRegistration(await user.registration(login, password, name));
     }
 
-    public logout(socket: Socket, token: string): void {
+    public logout(socket: Socket, token: string, cbLogout: Function): void {
         let result = false;
         if (token){
             const user = this.getUser(socket.id);
@@ -66,7 +63,7 @@ export default class UserManager extends Manager {
                 result=true;
             }
         }
-        socket.emit(this.MESSAGES.LOG_OUT, result);
+        cbLogout();
     }
 
 }

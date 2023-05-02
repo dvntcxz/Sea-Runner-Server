@@ -1,27 +1,15 @@
+////IMPORT//////
+////Modules/////
 import ActiveRecord from "../ActiveRecord";
 import DB from "../DB/DB";
 import md5 from "md5";
+////Types/////
 import { Tables } from "../Types";
 
-type TUserData = {
-    id: number;
-    token: string;
-    name: string;
-}
 
 export default class User extends ActiveRecord{
-    private token: string | null = null;
-    private login: string = '';
-    public name: string = '';
     constructor(private socketId: string,db:DB){
         super(db, Tables.users);
-    }
-
-    public get() {
-        return {
-            id: this.id,
-            name: this.name
-        }
     }
 
     public getSocketId(){
@@ -29,17 +17,25 @@ export default class User extends ActiveRecord{
     }
 
     public getId(){
-        return this.id;
+        return this.get('id');
     }
 
     public verification(token:string):boolean{
-        return (this.token === token);
+        return (this.get('token') === token);
     }
 
-    public async registration(login: string, password: string, name: string){
+    public getClientData(){
+        return {
+            id: this.get('id'),
+            name: this.get('name'),
+            token: this.get('token')
+        }
+    }
+
+    public async registration(login: string, password: string, name: string): Promise<boolean>{
         if (login && password && name) {
             if (!await this.db.getUserByLogin(login)){
-                return await this.db.addUser({login, password, name});
+                return await this.create({login, password, name});
             }
         }
         return false;
@@ -49,11 +45,9 @@ export default class User extends ActiveRecord{
         if (login && password){
             const user = await this.db.getUserByLogin(login);
             if (user && password === user.password){
-                this.id = user.id;
-                this.login = user.login;
-                this.name = user.name;
-                this.token = md5(Math.random().toString());
-                await this.db.setUserToken(this.id,this.token);
+                this.reload(user);
+                this.attributes.token = md5(Math.random().toString());
+                await this.db.setUserToken(this.getId(),this.get('token'));
                 return true;
             }
         }
@@ -61,6 +55,7 @@ export default class User extends ActiveRecord{
     }
 
     public async logout(){
-
+        await this.db.setUserToken(this.getId(),null);
+        this.attributes = {};
     }
 }

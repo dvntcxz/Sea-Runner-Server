@@ -8,10 +8,36 @@ import User from "./UserManager/User";
 ///////////////DB////////////////////
 /////////////////////////////////////
 
+
+export type TAttributes = {
+    [key: string]: any 
+}
+
+export type TAttribute = {
+    name: string,
+    canNull: boolean
+}
+
 export enum Tables {
     users = 'users',
     messages = 'messages',
     captain = 'captain'
+}
+
+export enum UserAttributes{
+    id = 'id',
+    login = 'login',
+    password = 'password',
+    name = 'name',
+    token = 'token'
+}
+
+export type TUser = {
+    id: number;
+    login: string;
+    password: string;
+    name: string;
+    token: string;
 }
 
 

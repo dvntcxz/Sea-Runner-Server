@@ -70,7 +70,8 @@ export default class DB {
     }
 
     public setUserToken(id: number, token: string | null) {
-        return this.orm.update('users',{token}).where({id});
+        
+        return this.orm.update('users',{token}).where({id}).run();
     }
 
     public async updateUser(id: number, field: object) {

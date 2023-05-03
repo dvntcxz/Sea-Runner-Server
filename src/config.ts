@@ -30,7 +30,8 @@ export default class CONFIG{
             CHANGE_USERS:'CHANGE_USERS',
             CHANGE_USER:'CHANGE_USER',
             USER_LOG_IN: 'USER_LOG_IN',
-            USER_LOADED: 'USER_LOADED'
+            USER_LOADED: 'USER_LOADED',
+            INIT_DATABASE: 'INIT_DATABASE'
         },
         TRIGGERS:{
             GET_USER_BY_TOKEN: 'GET_USER_BY_TOKEN',
@@ -45,4 +46,33 @@ export default class CONFIG{
             SEND_ALL: 'SEND_ALL'
         }
     }
+}
+
+const MIGRATION = {
+    'users': 
+            `CREATE table users 
+            (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            login text NOT NULL UNIQUE,
+            password text NOT NULL UNIQUE,
+            name text NOT NULL UNIQUE,
+            token text`,
+    'towns':
+            `CREATE table towns 
+            (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            name text NOT NULL UNIQUE,
+            allianceId text NOT NULL,
+            x real NOT NULL,
+            y real NOT NULL);
+            INSERT INTO towns(name,allianceId,x,y) VALUES 
+            ('Роял-харборт', 1, 200, 200),
+            ('Эспадорт', 2, 1500, 1500),
+            ('Крепость Гро', 3, 1500, 200)`,
+    'alliances':
+            `CREATE table alliances 
+            (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            name text NOT NULL UNIQUE);
+            INSERT INTO alliances(name) VALUES 
+            ('Компания'),
+            ('Армада'),
+            ('Альянс')`,
 }

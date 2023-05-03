@@ -1,31 +1,23 @@
+import ActiveRecord from "../../../ActiveRecord";
 import Cache from "../../../Cache";
 import DB from "../../../DB/DB";
-import { ICaptain, IShip } from "../../../Types";
+import { ICaptain, IShip, Tables } from "../../../Types";
 
-export default class Captain{
-    private id = 0;
-    private userId = 0;
-    private allianceId = 0;
-    private activeShipId = 0;
-    private x = 0;
-    private y = 0;
-    private direction = 0;
-    constructor(private db: DB){
-    }
-
-    private async create(){
-
-    }
-
-    public getId():number{
-        return this.id;
-    }
-
-    public getData(){
-
+export default class Captain extends ActiveRecord{
+    constructor(db: DB){
+        super(db, Tables.captains)
     }
 
     public addShip(ship: IShip):void {
         //this.ships.set(ship.id,new Ship(ship));
+    }
+
+    public async getByUserId(userId: number): Promise<boolean>{
+        const data = await this.db.getCaptain(userId);
+        if (data) {
+            this.reload(data);
+            return true;
+        }
+        else return false;
     }
 }

@@ -1,8 +1,11 @@
+import ActiveRecord from "../../../ActiveRecord";
 import DB from "../../../DB/DB";
+import { Tables } from "../../../Types";
 
-export default class Trader{
+export default class Trader extends ActiveRecord{
     private priceList = {};
-    constructor(private id: number, private db: DB){
+    constructor(db: DB){
+        super(db, Tables.traders)
     }
 
     public getPriceList(){

@@ -1,6 +1,6 @@
 import { Client } from 'pg';
 import ORM from './ORM';
-import { IUser, TUsers, TShips, IUserData, TMessages, IMessageData, IShipData, ICaptainData, TCaptainData, ICaptain, TCaptains, TRoom, Tables, TAttributes } from '../Types';
+import { IUser, TUsers, TShips, IUserData, TMessages, IMessageData, IShipData, ICaptainData, TCaptainData, ICaptain, TCaptains, TRoom, Tables, TAttributes, TMessage } from '../Types';
 
 export default class DB {
     private db: Client | null;
@@ -14,7 +14,6 @@ export default class DB {
         initCb: Function
     }) {
         const { HOST, PORT, NAME, USER, PASS, initCb = () => { } } = options;
-        console.log(HOST, PORT, NAME, USER, PASS);
         this.db = new Client({
             host: HOST,
             port: PORT,
@@ -31,7 +30,7 @@ export default class DB {
         })();
     }
 
-    async connect(initCb: Function){
+    async connect(initCb: Function) {
         if (this.db) {
             await this.db.connect();
             initCb();
@@ -45,16 +44,16 @@ export default class DB {
         }
     }
 
-    public async find(table: Tables, id: number){
-        return await this.orm.select(table).where({id: id}).run();
+    public async find(table: Tables, id: number) {
+        return await this.orm.select(table).where({ id: id }).run();
     }
 
-    public async updateRecord(table: Tables, id: number, data: object){
-        return await this.orm.update(table,data).where({id: id}).run();
+    public async updateRecord(table: Tables, id: number, data: object) {
+        return await this.orm.update(table, data).where({ id: id }).run();
     }
 
-    public async addRecord(table: Tables, data: object){
-        return await this.orm.insert(table,[{...data}]).run();
+    public async addRecord(table: Tables, data: object) {
+        return await this.orm.insert(table, [{ ...data }]).run();
     }
 
     ////////////////////////////
@@ -62,7 +61,7 @@ export default class DB {
     ////////////////////////////
 
     public async getUserByLogin(login: string) {
-        return await this.orm.select('users').where({login}).run()
+        return await this.orm.select('users').where({ login }).run()
     }
 
     public async addUser(data: IUserData) {
@@ -70,8 +69,8 @@ export default class DB {
     }
 
     public setUserToken(id: number, token: string | null) {
-        
-        return this.orm.update('users',{token}).where({id}).run();
+
+        return this.orm.update('users', { token }).where({ id }).run();
     }
 
     public async updateUser(id: number, field: object) {
@@ -87,7 +86,7 @@ export default class DB {
     }
 
     public getCaptain(userId: number) {
-        //return this.orm.get<ICaptain>('captains', userId);
+        return this.orm.select('captains').where({userId}).run();
     }
 
     public getCaptains() {
@@ -140,15 +139,15 @@ export default class DB {
     }
 
     public getRoomUserById(roomGuid: string, userId: number) {
-        //return this.orm.get<string>('roomsUsers', { roomGuid, userId });
+        return this.orm.select('roomsUsers').where({ roomGuid, userId }).run();
     }
 
     public getPrivateRoom(userId_1: number, userId_2: number) {
         //return 1;
     }
 
-    public addMessage(roomGuid: string, userIdFrom: number, message: string) {
-        //return this.orm.insert('messages', [{ roomGuid, userIdFrom, message }]).run();
+    public async addMessage(roomId: string, userIdFrom: number, message: string): Promise<TMessage | null> {
+        return await this.orm.insert('messages', [{ roomId, userIdFrom, message }]).run<TMessage>();
     }
 
     public editMessage(id: number, message: string) {

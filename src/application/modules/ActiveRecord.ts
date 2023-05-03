@@ -31,11 +31,16 @@ export default class ActiveRecord{
         return this.attributes[key];
     }
 
-    protected async refresh(){
-        if (this.attributes.id) {
+    protected async refresh(): Promise<boolean>{
+        if (this.attributes[this.primaryKey]) {
             const data = await this.db.find(this.table, this.attributes[this.primaryKey]);
-            if (data) this.reload(data);
-        };
+            if (data) 
+            {
+                this.reload(data);
+                return true;
+            };
+        }
+        return false;
     }
 
     protected async create(data: object): Promise<boolean>{
@@ -49,5 +54,9 @@ export default class ActiveRecord{
 
     protected save(){
         this.db.updateRecord(this.table, this.attributes[this.primaryKey], this.getData());
+    }
+
+    public getId():number{
+        return this.get('id');
     }
 }

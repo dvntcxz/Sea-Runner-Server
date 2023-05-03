@@ -10,13 +10,13 @@ export default class GameManager extends Manager {
     constructor(options: IManager) {
         super(options);
         this.io.on((socket:Socket) => {
-            socket.on(this.MESSAGES.GAME_LOADED, (answer: Function) => this.gameLoaded(answer));
+            socket.on(this.MESSAGES.GET_CAPTAIN, (token: string, answer: Function) => this.getCaptain(socket.id,token, answer));
         })
         this.game = new Game(this.db, this.mediator);
     }
 
     public gameLoaded(answer: Function){
-        answer();
+        //answer();
     }
 
     ////////////////////////////
@@ -33,10 +33,17 @@ export default class GameManager extends Manager {
         }
     }
 
-    public getCaptain(socket: Socket, token: string) {
-        const user = this.mediator.get('GET_USER', socket.id);
+    public async getCaptain(socketId: string, token: string, answer: Function) {
+        const user = this.mediator.get('GET_USER', socketId);
         if(user && user.verification(token)){
-            //достаем капитана и отправляем обратно клиенту через сокет
+            const cacheCaptain = this.captains.get(user.getId());
+            if (cacheCaptain) answer(cacheCaptain.getId());
+            else {
+                const captain = new Captain(this.db);
+                const result = await captain.getByUserId(user.getId());
+                if (result) answer(captain.getId());
+                else answer(null);
+            }
         }
     }
 
@@ -51,7 +58,7 @@ export default class GameManager extends Manager {
     public getScene() {
         const result = [];
         Object.values(this.captains.getAll()).
-            forEach((captain: Captain) => result.push(captain.getData()))
+            forEach((captain: Captain) => result.push())
     }
 
     ////////////////////////////

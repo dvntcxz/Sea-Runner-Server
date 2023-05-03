@@ -24,8 +24,8 @@ const { PORT, MEDIATOR, DB_CONNECT, MESSAGES } = new CONFIG;
 const mediator = new Mediator(MEDIATOR.EVENTS, MEDIATOR.TRIGGERS);
 const db = new DB({ ...DB_CONNECT, initCb });
 new UserManager({ mediator, db, io, MESSAGES });
-//new ChatManager({ mediator, db, io, MESSAGES });
-//new GameManager({ mediator, db, io, MESSAGES });
+new ChatManager({ mediator, db, io, MESSAGES });
+new GameManager({ mediator, db, io, MESSAGES });
 app.use(cors({
     origin: '*'
 }));

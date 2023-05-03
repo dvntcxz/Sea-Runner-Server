@@ -1,22 +1,22 @@
 import md5 from "md5";
 import DB from "../DB/DB";
 import User from "../UserManager/User";
-import { TMessages } from "../Types";
+import { TMessages, Tables } from "../Types";
+import ActiveRecord from "../ActiveRecord";
 
-export default class Rooms{
+export default class Rooms extends ActiveRecord{
     private guid: string = '';
     private type: string = '';
     private messages: TMessages = [];
-    constructor (private db: DB){
+    constructor (db: DB){
+        super(db, Tables.rooms);
     }
 
-    public async init(roomGuid: string): Promise<boolean>{
-        if (roomGuid){
-            const room = await this.db.getRoom(roomGuid);
-            if (room){
-                this.guid = room.guid;
-                this.type = room.type;
-                this.loadMessage();
+    public async init(roomId: number): Promise<boolean>{
+        if (roomId){
+            this.attributes.id = roomId;
+            if (await this.refresh()){
+                await this.loadMessage();
                 return true;
             }
             return false;
@@ -43,20 +43,16 @@ export default class Rooms{
         }
     }
 
-    public getId(): string{
-        return this.guid;
-    }
-
     async addMessage(user:User, message: string){
         if (user && message){
-            const result  = await this.db.addMessage(this.guid, user.getId(), message);
-            if (result) this.messages = await this.loadMessage();
+            const result  = await this.db.addMessage(this.attributes.id, user.getId(), message);
+            if (result) this.messages.push(result);
             return this.getMessages();
         }
     }
 
     async loadMessage(){
-        return await this.db.getMessages(this.guid);
+        return await this.db.getMessages(this.attributes.id);
     }
 
     getMessages(){

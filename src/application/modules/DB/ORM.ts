@@ -21,7 +21,7 @@ export default class ORM {
         return sqlQuery;
     }
 
-    async run(query: string, values: any[]): Promise<TUser | null> {
+    async run<T>(query: string, values: any[]): Promise<T | null> {
         try {
             const result = await this.db.query(query, values);
             return (result.rows[0]) ? (result.rowCount === 1) ? result.rows[0] : result.rows : null;
@@ -62,7 +62,7 @@ export default class ORM {
     insert(table: string, records: object[]) {
         const { fieldsNames, values, valuesMask } = this.getValuesAndNameFields(records);
         let query: string = `INSERT INTO ${table} (${fieldsNames.join(', ')}) VALUES ${valuesMask.join(', ')} RETURNING *`;
-        return { run: () => this.run(query, values) }
+        return { run: <T>() => this.run<T>(query, values) }
     }
 
     private getValuesParams(conditions: object | number, operand: string, index: number = 0) {

@@ -22,15 +22,10 @@ export enum Tables {
     users = 'users',
     messages = 'messages',
     captains = 'captains',
-    towns = 'towns'
-}
-
-export enum UserAttributes{
-    id = 'id',
-    login = 'login',
-    password = 'password',
-    name = 'name',
-    token = 'token'
+    towns = 'towns',
+    alliances = 'alliances',
+    rooms = 'rooms',
+    traders = 'traders'
 }
 
 export type TUser = {
@@ -41,6 +36,24 @@ export type TUser = {
     token: string;
 }
 
+export enum TypesRoom {
+    Public = 'public',
+    Private = 'private',
+    Alliance = 'alliance'
+}
+
+export type TRooms = {
+    id: number,
+    type: TypesRoom
+}
+
+export type TMessage = {
+    roomId: number,
+    userIdFrom: number,
+    message: string
+}
+
+export type TMessages = TMessage[];
 
 ///////////////////////////
 export interface ILogin {
@@ -145,7 +158,7 @@ export interface IMessage extends IMessageData {
     id: number;
 }
 
-export type TMessages = IMessage[];
+
 
 export interface IUserSocket extends Socket {
     user: User | null;

@@ -16,10 +16,6 @@ export default class User extends ActiveRecord{
         return this.socketId;
     }
 
-    public getId(){
-        return this.get('id');
-    }
-
     public verification(token:string):boolean{
         return (this.get('token') === token);
     }

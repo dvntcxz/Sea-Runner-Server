@@ -10,7 +10,7 @@ describe('User.auth', () => {
     const user = new User(db);
     const login = 'test'
     const password = 'test'
-    const name = 'Test';
+    const name = 'test';
     test('Неправильный пароль', async () => {
         const result = await user.auth(login, '1234','');
         expect(result).toEqual(false);

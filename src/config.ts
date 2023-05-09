@@ -21,7 +21,8 @@ export default class CONFIG {
         REGISTRATION: 'REGISTRATION',
         LOG_OUT: 'LOG_OUT',
         GAME_LOADED: 'GAME_LOADED',
-        GET_CAPTAIN: 'GET_CAPTAIN'
+        GET_CAPTAIN: 'GET_CAPTAIN',
+        ADD_CAPTAIN: 'ADD_CAPTAIN'
     }
 
     public MEDIATOR: {

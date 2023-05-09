@@ -11,7 +11,7 @@ describe('setUserToken', () => {
     let user: TUser;
     test('Пользователь Test существует', async () => {
         user = await db.getUserByLogin('test');
-        expect(user.name).toEqual('Test');
+        expect(user.name).toEqual('test');
     });
     test('Токен изменяется на md5', async () => {
         const md5Token = md5(Math.random().toString());

@@ -26,17 +26,21 @@ export default class GameManager extends Manager {
     /////////CAPTAIN////////////
     ////////////////////////////
 
-    public addCaptain(user:User, allianceId: number, answer: Function) {
-            //по айди альанса достаем город из таблицы Town
-            //у города берем координаты в X и Y
-            //создаем нового капиата new Captain(this.db)
-            const captain = new Captain(this.db);
-            //добавляем капиатана в таблицу Captain.create(user.getId(), null, X, Y)
+    public async addCaptain(user:User, allianceId: number, answer: Function) {
+        const captain = new Captain(this.db);
+        if (!await captain.getByUserId(user.getId())){
             captain.addCaptain({userId:user.getId(), 
                 allianceId: allianceId,
                 shipId:null, 
                 x: 200, 
                 y: 200});
+            answer(captain.getData());
+        }
+            //по айди альанса достаем город из таблицы Town
+            //у города берем координаты в X и Y
+            //создаем нового капиата new Captain(this.db)
+            
+            //добавляем капиатана в таблицу Captain.create(user.getId(), null, X, Y)
     }
 
     public async getCaptain(user:User, answer: Function) {

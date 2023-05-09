@@ -8,24 +8,23 @@ import { Tables } from "../Types";
 
 
 export default class User extends ActiveRecord{
-    constructor(private socketId: string,db:DB){
+    private socketId!: string;
+    constructor(db:DB){
         super(db, Tables.users);
+        this.fields = ['id','login','name','token'];
+        this.hidden = ['login']
     }
 
     public getSocketId(){
         return this.socketId;
     }
 
-    public verification(token:string):boolean{
-        return (this.get('token') === token);
+    public getToken(){
+        return this.get('token');
     }
 
-    public getClientData(){
-        return {
-            id: this.get('id'),
-            name: this.get('name'),
-            token: this.get('token')
-        }
+    public verification(token:string):boolean{
+        return (this.get('token') === token);
     }
 
     public async registration(login: string, password: string, name: string): Promise<boolean>{
@@ -37,12 +36,13 @@ export default class User extends ActiveRecord{
         return false;
     }
 
-    public async auth(login: string, password:string): Promise<boolean> {
+    public async auth(login: string, password:string,socketId:string): Promise<boolean> {
         if (login && password){
             const user = await this.db.getUserByLogin(login);
             if (user && password === user.password){
                 this.reload(user);
                 this.attributes.token = md5(Math.random().toString());
+                this.socketId = socketId;
                 await this.db.setUserToken(this.getId(),this.get('token'));
                 return true;
             }

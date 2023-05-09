@@ -14,7 +14,7 @@ const initCb = () => {}
 describe('User.registration', () => {
     const { DB_CONNECT } = new CONFIG;
     const db = new DB({ ...DB_CONNECT, initCb });
-    const user = new User('123',db);
+    const user = new User(db);
     const newLogin = randomString(8);
     const password = randomString(8);
     const name = randomString(10);
@@ -27,7 +27,7 @@ describe('User.registration', () => {
         expect(result).toEqual(false);
     });
     test('Попытка входа', async () => {
-        const result = await user.auth(newLogin, password);
-        expect(user.getClientData().token).not.toBeNull();
+        const result = await user.auth(newLogin, password, '');
+        expect(user.getData().token).not.toBeNull();
     });
 })

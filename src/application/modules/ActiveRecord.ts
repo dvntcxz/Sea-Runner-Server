@@ -1,21 +1,20 @@
 import { TAttributes, Tables} from "./Types";
 
 import DB from "./DB/DB";
-import getFieldsName from "./getFieldsNames";
 
 export default class ActiveRecord{
     protected primaryKey = 'id';
     protected fields: string [] = [];
+    protected hidden: string [] = [];
     protected attributes: TAttributes = {};
     constructor(readonly db: DB, readonly table: Tables){
-        this.fields = getFieldsName(table);
     }
 
-    protected getData(): object{
+    public getData(): TAttributes{
         const attributes: TAttributes = {};
         this.fields.forEach((field: string) => {
             const value = this.get(field);
-            if (field !== this.primaryKey) attributes[field] = value;
+            if (!this.hidden.find((value) => value === field)) attributes[field] = value;
         })
         return attributes;
     }

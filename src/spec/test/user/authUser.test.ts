@@ -7,25 +7,25 @@ const initCb = () => {}
 describe('User.auth', () => {
     const { DB_CONNECT } = new CONFIG;
     const db = new DB({ ...DB_CONNECT, initCb });
-    const user = new User('123',db);
+    const user = new User(db);
     const login = 'test'
     const password = 'test'
-    const name = 'Test';
+    const name = 'test';
     test('Неправильный пароль', async () => {
-        const result = await user.auth(login, '1234');
+        const result = await user.auth(login, '1234','');
         expect(result).toEqual(false);
     });
     test('Попытка входа', async () => {
-        const result = await user.auth(login, password);
+        const result = await user.auth(login, password,'');
         expect(result).toEqual(true);
-        const data = user.getClientData()
+        const data = user.getData()
         expect(data.token).not.toBeNull();
         expect(data.name).toBe(name);
     });
     test('Повторный вход', async () => {
-        const oldToken = user.getClientData().token;
-        const result = await user.auth(login, password);
-        expect(user.getClientData().token).not.toBeNull();
-        expect(user.getClientData().token).not.toBe(oldToken);
+        const oldToken = user.getData().token;
+        const result = await user.auth(login, password,'');
+        expect(user.getData().token).not.toBeNull();
+        expect(user.getData().token).not.toBe(oldToken);
     });
 })

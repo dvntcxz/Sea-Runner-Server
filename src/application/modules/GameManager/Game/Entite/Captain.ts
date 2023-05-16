@@ -5,7 +5,12 @@ import { ICaptain, IShip, Tables } from "../../../Types";
 
 export default class Captain extends ActiveRecord{
     constructor(db: DB){
-        super(db, Tables.captains)
+        super(db, Tables.captains);
+        this.fields = ['id', 'userid', 'allianceid', 'shipid', 'x', 'y'];
+    }
+
+    public addCaptain(data: any){
+        this.create(data);
     }
 
     public addShip(ship: IShip):void {

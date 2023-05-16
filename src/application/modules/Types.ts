@@ -1,13 +1,16 @@
-///////////////////////////
-////////Users//////////////
 
-import { Socket } from "socket.io";
-import User from "./UserManager/User";
+/////////////////////////////////////
+///////////////forAll////////////////
+/////////////////////////////////////
+
+export enum Errors {
+    UNAUTH = '403',
+}
+
 
 /////////////////////////////////////
 ///////////////DB////////////////////
 /////////////////////////////////////
-
 
 export type TAttributes = {
     [key: string]: any 
@@ -71,6 +74,11 @@ export interface IUser extends IUserData{
 }
 
 export type TUsers = IUser[];
+
+export type TAuthData = {
+    token: string;
+    callback: Function | null;
+}
 
 ///////////////////////////
 ////////GAME///////////////
@@ -156,12 +164,6 @@ export interface IMessageData  {
 
 export interface IMessage extends IMessageData {
     id: number;
-}
-
-
-
-export interface IUserSocket extends Socket {
-    user: User | null;
 }
 
 export type TRoom = {

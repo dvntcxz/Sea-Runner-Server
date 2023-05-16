@@ -17,8 +17,8 @@ export default class Cache<T>{
         return this.cache[key];
     }
 
-    public getAll(): TCache<T> {
-        return this.cache;
+    public getAll(): T[] {
+        return Object.values(this.cache);
     }
 
     public remove(key: Key): void {

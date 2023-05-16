@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "test": "jest -c src/jest.config.ts"
+    "test": "jest -c src/jest.config.ts",
+    "start": "npx ts-node src/app.ts"
   },
   "keywords": [],
   "author": "",

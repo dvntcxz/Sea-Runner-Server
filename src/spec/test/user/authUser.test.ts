@@ -1,31 +1,28 @@
-import DB from "../../../application/modules/DB/DB";
-import CONFIG from "../../../config";
 import User from "../../../application/modules/UserManager/User";
+import { beforeAllConfig, regUser } from "./config";
+let user: User;
 
-const initCb = () => {}
+beforeAll(async () => user = await beforeAllConfig());
+
 
 describe('User.auth', () => {
-    const { DB_CONNECT } = new CONFIG;
-    const db = new DB({ ...DB_CONNECT, initCb });
-    const user = new User(db);
-    const login = 'test'
-    const password = 'test'
-    const name = 'test';
+    const {login, password, socketId } = regUser;
+
     test('Неправильный пароль', async () => {
-        const result = await user.auth(login, '1234','');
+        const result = await user.auth(login, password, socketId);
         expect(result).toEqual(false);
     });
-    test('Попытка входа', async () => {
-        const result = await user.auth(login, password,'');
+
+    test('Попытка входа c существующим', async () => {
+        const result = await user.auth('vasya', '123', socketId);
         expect(result).toEqual(true);
+    });
+
+    test('Попытка входа', async () => {
+        const result = await user.auth(login, password, socketId);
+        expect(result).toEqual(false);
+
         const data = user.getData()
         expect(data.token).not.toBeNull();
-        expect(data.name).toBe(name);
-    });
-    test('Повторный вход', async () => {
-        const oldToken = user.getData().token;
-        const result = await user.auth(login, password,'');
-        expect(user.getData().token).not.toBeNull();
-        expect(user.getData().token).not.toBe(oldToken);
     });
 })

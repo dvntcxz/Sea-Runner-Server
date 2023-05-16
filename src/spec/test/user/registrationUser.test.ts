@@ -1,33 +1,25 @@
-import DB from "../../../application/modules/DB/DB";
-import CONFIG from "../../../config";
 import User from "../../../application/modules/UserManager/User";
+import { regUser, beforeAllConfig } from "./config";
 
-function randomString(i: number) {
-    var rnd = '';
-    while (rnd.length < i) 
-        rnd += Math.random().toString(36).substring(2);
-    return rnd.substring(0, i);
-};
+let user: User;
 
-const initCb = () => {}
+beforeAll(async () => user = await beforeAllConfig());
 
 describe('User.registration', () => {
-    const { DB_CONNECT } = new CONFIG;
-    const db = new DB({ ...DB_CONNECT, initCb });
-    const user = new User(db);
-    const newLogin = randomString(8);
-    const password = randomString(8);
-    const name = randomString(10);
+    const { login, password, name, socketId } = regUser;
+
     test('Регистрируем рандомного пользователя', async () => {
-        const result = await user.registration(newLogin, password, name);
+        const result = await user.registration(login, password, name);
         expect(result).toEqual(true);
     });
+
     test('Повторная регистрация', async () => {
-        const result = await user.registration(newLogin, password, name);
+        const result = await user.registration(login, password, name);
         expect(result).toEqual(false);
     });
+
     test('Попытка входа', async () => {
-        const result = await user.auth(newLogin, password, '');
-        expect(user.getData().token).not.toBeNull();
+        const result = await user.auth(login, password, socketId);
+        expect(result).toEqual(true);
     });
 })

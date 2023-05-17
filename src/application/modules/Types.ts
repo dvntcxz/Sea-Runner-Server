@@ -28,7 +28,8 @@ export enum Tables {
     towns = 'towns',
     alliances = 'alliances',
     rooms = 'rooms',
-    traders = 'traders'
+    traders = 'traders',
+    ships = 'ship'
 }
 
 export type TUser = {

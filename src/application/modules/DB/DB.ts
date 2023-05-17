@@ -109,8 +109,8 @@ export default class DB {
         //return this.orm.update('ships', userId, { name });
     }
 
-    public getShips() {
-        //return this.orm.all('ships').all<TShips>();
+    public getShips(id: number): TShips {
+        return this.orm.select('ships').where({id: id}).run();
     }
 
 

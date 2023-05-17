@@ -3,26 +3,9 @@ import CONFIG from "../../../config";
 import User from "../../../application/modules/UserManager/User";
 import Captain from "../../../application/modules/GameManager/Game/Entite/Captain";
 import { resolve } from "path";
+import { getActiveRecord } from "../config";
 
-export const beforeAllConfig = () => {
-    return new Promise<User>((resolve) => {
-        const { DB_CONNECT } = new CONFIG;
-        const db = new DB({
-            ...DB_CONNECT,
-            initCb: () => resolve(new User(db))
-        });
-    });
-}
-
-export const beforeAllConfigCaptain = () => {
-    return new Promise<Captain>((resolve) => {
-        const { DB_CONNECT } = new CONFIG;
-        const db = new DB({
-            ...DB_CONNECT,
-            initCb: () => resolve(new Captain(db))
-        });
-    });
-}
+export const getActiveRecordUser = () => getActiveRecord<User>((db:DB) => new User(db));
 
 function randomString(i: number) {
     var rnd = '';

@@ -43,7 +43,6 @@ export default class Captain extends ActiveRecord{
         const result = super.getData();
         result.ship = (this.ship) ? this.ship.getData() : null;
         result.ships = this.ships || [];
-        console.log(result);
         return result;
     }
 }

@@ -85,5 +85,13 @@ const MIGRATION = {
             allianceId bigint NOT NULL ,
             shipId bigint,
             x bigint,
-            y bigint)`,
+            y bigint,
+            status text NOT NULL DEFAULT 'town'::text)`,
+    'ships':
+        `CREATE table ships 
+            (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            captain_id bigint NOT NULL,
+            speed bigint NOT NULL,
+            attack_cooldown bigint NOT NULL,
+            current_hp bigint)`,
 }

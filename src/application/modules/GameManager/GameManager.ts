@@ -3,8 +3,8 @@ import Cache from "../Cache";
 import Manager, { IManager } from "../Manager"
 import Captain from "./Game/Entite/Captain";
 import Game from "./Game/Game";
-import Auth from "../Auth";
 import User from "../UserManager/User";
+import Auth from "../Auth";
 
 export default class GameManager extends Manager {
     private captains = new Cache<Captain>;
@@ -34,9 +34,10 @@ export default class GameManager extends Manager {
                 shipId:null, 
                 x: 200, 
                 y: 200});
+                this.captains.set(user.getId(), captain);
             answer(captain.getData());
         }
-            //по айди альанса достаем город из таблицы Town
+            //по айди альянса достаем город из таблицы Town
             //у города берем координаты в X и Y
             //создаем нового капиата new Captain(this.db)
             
@@ -65,15 +66,11 @@ export default class GameManager extends Manager {
     ////////////SCENE///////////
     ////////////////////////////
     public getScene() {
-        const result = [];
-        Object.values(this.captains.getAll()).
-            forEach((captain: Captain) => result.push())
     }
 
     ////////////////////////////
     ////////////TOWN////////////
     ////////////////////////////
     public getTown(){
-
     }
 }
